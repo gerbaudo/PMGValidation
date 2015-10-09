@@ -5,12 +5,17 @@
 
 #include "xAODRootAccess/Init.h"
 #include "xAODRootAccess/TEvent.h"
+#include "xAODTruth/TruthEvent.h"
+#include "xAODTruth/TruthEventContainer.h"
 #include "xAODRootAccess/tools/Message.h"
 #include "xAODEventInfo/EventInfo.h"
 #include "xAODTruth/TruthParticleContainer.h"
 #include "xAODJet/JetContainer.h"
 #include "xAODJet/JetAuxContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
+
+#include <iostream>
+using namespace std;
 
 /// Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )			   \
@@ -182,14 +187,29 @@ EL::StatusCode TruthReader :: execute ()
 
   //----------------------------
   // Event information
-  //--------------------------- 
+  //---------------------------
   const xAOD::EventInfo* eventInfo = 0;
-  EL_RETURN_CHECK("execute",event->retrieve( eventInfo, "EventInfo")); 
+  EL_RETURN_CHECK("execute",event->retrieve( eventInfo, "EventInfo"));
   //  std::cout << eventInfo->eventNumber() << std::endl;
+
+  const xAOD::TruthEventContainer* truthEvents = 0;
+  EL_RETURN_CHECK("execute()", event->retrieve(truthEvents, "TruthEvents"));
+  if(truthEvents){
+      xAOD::TruthEventContainer::const_iterator te_itr = truthEvents->begin();
+      xAOD::TruthEventContainer::const_iterator te_end = truthEvents->end();
+      cout<<"TruthEvents : ";
+      for(; te_itr!=te_end; ++te_itr) {
+          cout<<"TruthEvent::weights() : ";
+          for(auto w : (*te_itr)->weights())
+              cout<<" "<<w;
+          cout<<endl;
+      }
+      cout<<endl;
+  }
 
   //----------------------------
   // Jets
-  //--------------------------- 
+  //---------------------------
   const xAOD::JetContainer* jets = 0;
   EL_RETURN_CHECK("execute()",event->retrieve( jets, "AntiKt4TruthJets" ));
 
@@ -207,7 +227,7 @@ EL::StatusCode TruthReader :: execute ()
 
   //----------------------------
   // Electron
-  //--------------------------- 
+  //---------------------------
   const xAOD::TruthParticleContainer* electrons = 0;
   EL_RETURN_CHECK("execute",event->retrieve( electrons, "TruthElectrons" ));
 
@@ -226,7 +246,7 @@ EL::StatusCode TruthReader :: execute ()
 
   //----------------------------
   // Muons
-  //--------------------------- 
+  //---------------------------
   const xAOD::TruthParticleContainer* muons = 0;
   EL_RETURN_CHECK("execute",event->retrieve( muons, "TruthMuons" ));
 
@@ -245,7 +265,7 @@ EL::StatusCode TruthReader :: execute ()
 
   //----------------------------
   // MET
-  //--------------------------- 
+  //---------------------------
   const xAOD::MissingETContainer* met = 0;
   EL_RETURN_CHECK("execute()",event->retrieve( met, "MET_Truth" ));
 
@@ -258,7 +278,7 @@ EL::StatusCode TruthReader :: execute ()
 
   //----------------------------
   // Overlap Removal
-  //--------------------------- 
+  //---------------------------
 
   // Jet Removal
   for(int i_jet = 0 ; i_jet < (int)v_jet.size() ; i_jet++ ){
@@ -306,55 +326,55 @@ EL::StatusCode TruthReader :: execute ()
 
   //----------------------------
   // Fill Histograms
-  //--------------------------- 
+  //---------------------------
 
-  h_jetN->Fill( v_jet.size() ); 
-
+  h_jetN->Fill( v_jet.size() );
+  const double mev2gev = 1.0e-3;
   int N_bjet =0;
   for( int i_jet = 0 ; i_jet < (int)v_jet.size() ; i_jet++ ) {
 
-    h_jetPt->Fill( ( v_jet.at(i_jet)->pt()) * 0.001); 
-    h_jetE->Fill( ( v_jet.at(i_jet)->e()) * 0.001); 
-    h_jetEta->Fill( v_jet.at(i_jet)->eta() ); 
-    h_jetPhi->Fill( v_jet.at(i_jet)->phi() ); 
+    h_jetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev);
+    h_jetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev);
+    h_jetEta->Fill( v_jet.at(i_jet)->eta() );
+    h_jetPhi->Fill( v_jet.at(i_jet)->phi() );
 
-    meff += ( v_jet.at(i_jet)->pt() ) * 0.001 ;
+    meff += ( v_jet.at(i_jet)->pt() ) * mev2gev ;
 
     if( abs( v_jet.at(i_jet)->auxdata<int>("PartonTruthLabelID") ) != 5 ) continue;
 
-    h_bjetPt->Fill( ( v_jet.at(i_jet)->pt()) * 0.001); 
-    h_bjetE->Fill( ( v_jet.at(i_jet)->e()) * 0.001); 
-    h_bjetEta->Fill( v_jet.at(i_jet)->eta() ); 
-    h_bjetPhi->Fill( v_jet.at(i_jet)->phi() ); 
+    h_bjetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev);
+    h_bjetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev);
+    h_bjetEta->Fill( v_jet.at(i_jet)->eta() );
+    h_bjetPhi->Fill( v_jet.at(i_jet)->phi() );
 
     N_bjet++;
   }
 
-  h_bjetN->Fill( N_bjet ); 
-  h_electronN->Fill( v_electron.size() ); 
+  h_bjetN->Fill( N_bjet );
+  h_electronN->Fill( v_electron.size() );
 
   for( int i_electron = 0 ; i_electron < (int)v_electron.size() ; i_electron++ ) {
 
-    h_electronPt->Fill( ( v_electron.at(i_electron)->pt()) * 0.001); 
-    h_electronE->Fill( ( v_electron.at(i_electron)->e()) * 0.001); 
-    h_electronEta->Fill( v_electron.at(i_electron)->eta() ); 
-    h_electronPhi->Fill( v_electron.at(i_electron)->phi() ); 
-    h_electronQ->Fill( v_electron.at(i_electron)->charge()/2 ); 
+    h_electronPt->Fill( ( v_electron.at(i_electron)->pt()) * mev2gev);
+    h_electronE->Fill( ( v_electron.at(i_electron)->e()) * mev2gev);
+    h_electronEta->Fill( v_electron.at(i_electron)->eta() );
+    h_electronPhi->Fill( v_electron.at(i_electron)->phi() );
+    h_electronQ->Fill( v_electron.at(i_electron)->charge()/2 );
 
-    meff += ( v_electron.at(i_electron)->pt() ) * 0.001 ;
+    meff += ( v_electron.at(i_electron)->pt() ) * mev2gev ;
   }
 
-  h_muonN->Fill( v_muon.size() ); 
+  h_muonN->Fill( v_muon.size() );
 
   for( int i_muon = 0 ; i_muon < (int)v_muon.size() ; i_muon++ ) {
 
-    h_muonPt->Fill( ( v_muon.at(i_muon)->pt()) * 0.001); 
-    h_muonE->Fill( ( v_muon.at(i_muon)->e()) * 0.001); 
-    h_muonEta->Fill( v_muon.at(i_muon)->eta() ); 
-    h_muonPhi->Fill( v_muon.at(i_muon)->phi() ); 
-    h_muonQ->Fill( v_muon.at(i_muon)->charge()/2 ); 
+    h_muonPt->Fill( ( v_muon.at(i_muon)->pt()) * mev2gev);
+    h_muonE->Fill( ( v_muon.at(i_muon)->e()) * mev2gev);
+    h_muonEta->Fill( v_muon.at(i_muon)->eta() );
+    h_muonPhi->Fill( v_muon.at(i_muon)->phi() );
+    h_muonQ->Fill( v_muon.at(i_muon)->charge()/2 );
 
-    meff += ( v_muon.at(i_muon)->pt() ) * 0.001 ;
+    meff += ( v_muon.at(i_muon)->pt() ) * mev2gev ;
   }
 
   h_meff->Fill( meff );

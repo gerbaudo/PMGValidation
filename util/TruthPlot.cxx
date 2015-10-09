@@ -6,6 +6,7 @@
 #include "SampleHandler/ScanDir.h"
 #include "EventLoop/Job.h"
 #include "EventLoop/DirectDriver.h"
+#include "EventLoop/LSFDriver.h"
 #include "SampleHandler/DiskListLocal.h"
 
 #include <TSystem.h>
@@ -14,6 +15,7 @@
 using namespace std;
 
 int main( int argc, char* argv[] ) {
+
 
   // Take the submit directory from the input if provided:
   string submitDir = "submitDir";
@@ -30,8 +32,11 @@ int main( int argc, char* argv[] ) {
   // Construct the samples to run on:
   SH::SampleHandler sh;
 
-  // use SampleHandler to scan all of the subdirectories of a directory for particular MC single file:
-  SH::ScanDir().sampleDepth(0).samplePattern( filename ).scan(sh, inputFilePath);
+  SH::readFileList(sh, "ttW_sysWgt",
+                   "PMGValidation/filelist/eos/list_eos_user.gerbaudo.truth1.2015-10-05_194329.510066.13TeV_ttW_sysWgt_test3_EXT0.txt");
+
+  // // use SampleHandler to scan all of the subdirectories of a directory for particular MC single file:
+  // SH::ScanDir().sampleDepth(0).samplePattern( filename ).scan(sh, inputFilePath);
 
   // Set the name of the input TTree. It's always "CollectionTree"
   // for xAOD files.
@@ -43,7 +48,7 @@ int main( int argc, char* argv[] ) {
   // Create an EventLoop job:
   EL::Job job;
   job.sampleHandler( sh );
-  job.options()->setDouble (EL::Job::optMaxEvents, 5000);
+  job.options()->setDouble (EL::Job::optMaxEvents, 50);
 
   // Add our analysis to the job:
   TruthReader* aTruth = new TruthReader();
@@ -52,6 +57,9 @@ int main( int argc, char* argv[] ) {
   // Run the job using the local/direct driver:
   EL::DirectDriver driver;
   driver.submit( job, submitDir );
+
+  // EL::LSFDriver driver;
+  // driver.submit( job, submitDir );
 
   return 0;
 }
