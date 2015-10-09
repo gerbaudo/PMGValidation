@@ -30,7 +30,6 @@ int main( int argc, char* argv[] ) {
 
   TFile *f1 = new TFile( file1 );
   TFile *f2 = new TFile( file2 );
-  TFile *fFinal = new TFile( "test.root" ,"recreate");
 
   TString h_name[25] = {"h_jetN","h_jetPt","h_jetE","h_jetEta","h_jetPhi",
 			"h_bjetN","h_bjetPt","h_bjetE","h_bjetEta","h_bjetPhi",

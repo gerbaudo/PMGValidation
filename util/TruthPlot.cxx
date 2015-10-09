@@ -1,3 +1,5 @@
+#include "PMGValidation/TruthReader.h"
+
 #include "xAODRootAccess/Init.h"
 #include "SampleHandler/SampleHandler.h"
 #include "SampleHandler/ToolsDiscovery.h"
@@ -5,16 +7,18 @@
 #include "EventLoop/Job.h"
 #include "EventLoop/DirectDriver.h"
 #include "SampleHandler/DiskListLocal.h"
+
 #include <TSystem.h>
 
-#include "PMGValidation/TruthReader.h"
+#include <string>
+using namespace std;
 
 int main( int argc, char* argv[] ) {
 
   // Take the submit directory from the input if provided:
-  std::string submitDir = "submitDir";
-  char* inputFilePath = gSystem->ExpandPathName ("/data1/atlas/berlendis/Data/4top/");
-  char* filename = "DAOD_TRUTH1.mc15_4top.pool.root";
+  string submitDir = "submitDir";
+  string inputFilePath = gSystem->ExpandPathName ("/data1/atlas/berlendis/Data/4top/");
+  string filename = "DAOD_TRUTH1.mc15_4top.pool.root";
 
   if( argc > 1 ) inputFilePath = argv[ 1 ];
   if( argc > 2 ) filename = argv[ 2 ];

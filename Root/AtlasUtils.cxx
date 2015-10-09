@@ -100,19 +100,12 @@ TGraphAsymmErrors* myTGraphErrorsDivide(TGraphAsymmErrors* g1,TGraphAsymmErrors*
   double dy1h=0., dy1l=0.;
   double dy2h=0., dy2l=0.;
 
-  double* X1 = g1->GetX();
-  double* Y1 = g1->GetY();
   double* EXhigh1 = g1->GetEXhigh();
-  double* EXlow1 =  g1->GetEXlow();
+  double* EXlow1  = g1->GetEXlow();
   double* EYhigh1 = g1->GetEYhigh();
-  double* EYlow1 =  g1->GetEYlow();
-
-  double* X2 = g2->GetX();
-  double* Y2 = g2->GetY();
-  double* EXhigh2 = g2->GetEXhigh();
-  double* EXlow2 =  g2->GetEXlow();
+  double* EYlow1  = g1->GetEYlow();
   double* EYhigh2 = g2->GetEYhigh();
-  double* EYlow2 =  g2->GetEYlow();
+  double* EYlow2  = g2->GetEYlow();
 
   for (int i=0; i<g1->GetN(); i++) {
     g1->GetPoint(i,x1,y1);
