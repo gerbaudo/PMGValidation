@@ -386,9 +386,6 @@ EL::StatusCode TruthReader :: finalize ()
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
 
-  xAOD::TEvent* event = wk()->xaodEvent();
-  Info("finalize()", "Number of events = %lli", event->getEntries() );
-
   return EL::StatusCode::SUCCESS;
 }
 
