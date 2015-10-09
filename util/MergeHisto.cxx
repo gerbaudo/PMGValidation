@@ -14,6 +14,9 @@
 #include <PMGValidation/AtlasStyle.h>
 #include <PMGValidation/AtlasLabels.h>
 
+#include <vector>
+using namespace std;
+
 int main( int argc, char* argv[] ) {
 
   if( argc != 4 ) {
@@ -31,20 +34,19 @@ int main( int argc, char* argv[] ) {
   TFile *f1 = new TFile( file1 );
   TFile *f2 = new TFile( file2 );
 
-  TString h_name[25] = {"h_jetN","h_jetPt","h_jetE","h_jetEta","h_jetPhi",
-			"h_bjetN","h_bjetPt","h_bjetE","h_bjetEta","h_bjetPhi",
-			"h_electronN","h_electronPt","h_electronE","h_electronEta","h_electronPhi","h_electronQ",
-			"h_muonN","h_muonPt","h_muonE","h_muonEta","h_muonPhi","h_muonQ",
-			"h_met","h_metPhi","h_meff"};
-
-  for(int i=0;i<25;i++){
+  vector<TString> h_names = {"h_jetN","h_jetPt","h_jetE","h_jetEta","h_jetPhi",
+                             "h_bjetN","h_bjetPt","h_bjetE","h_bjetEta","h_bjetPhi",
+                             "h_electronN","h_electronPt","h_electronE","h_electronEta","h_electronPhi","h_electronQ",
+                             "h_muonN","h_muonPt","h_muonE","h_muonEta","h_muonPhi","h_muonQ",
+                             "h_met","h_metPhi","h_meff"};
+  for(auto &h_name : h_names){
 
     // Object
-    TH1F  *h1 = (TH1F*)f1->Get( h_name[i] );
+    TH1F  *h1 = (TH1F*)f1->Get( h_name );
     h1->SetLineColor(kBlue+2);
     h1->GetXaxis()->SetLabelOffset(0.05);
 
-    TH1F  *h2 = (TH1F*)f2->Get( h_name[i] );
+    TH1F  *h2 = (TH1F*)f2->Get( h_name );
     h2->SetMarkerStyle(1);
     h2->SetLineColor(kRed+2);
 
@@ -54,7 +56,7 @@ int main( int argc, char* argv[] ) {
     legend->AddEntry(h1, "mc12","l");
     legend->AddEntry(h2, "mc15","l");
 
-    TCanvas *c = new TCanvas( h_name[i] , h_name[i] );
+    TCanvas *c = new TCanvas( h_name , h_name );
     TPad* p1 = new TPad("p1","p1",0.0,0.25,1.0,1.0,-22);
     TPad* p2 = new TPad("p2","p2",0.0,0.0,1.0,0.25,-21);
     p1->SetBottomMargin(0.02);
@@ -108,14 +110,14 @@ int main( int argc, char* argv[] ) {
 
     // Write
 
-    c->Print( h_name[i] + ".png" );
+    c->Print( h_name + ".png" );
 
     // if(i==0) c->Print(file3+"(");
     // else c->Print(file3);
 
     // c->Write();
 
-    TCanvas *clog = new TCanvas( h_name[i]+"_log" , h_name[i]+"_log" );
+    TCanvas *clog = new TCanvas( h_name+"_log" , h_name+"_log" );
 
     TPad *p1log = (TPad*)p1->Clone();
     p1log->SetLogy(1);
@@ -123,7 +125,7 @@ int main( int argc, char* argv[] ) {
     p1log->Draw();
     p2->Draw();
 
-    clog->Print( h_name[i] + "_log.png" );
+    clog->Print( h_name + "_log.png" );
 
     // if(i==24) clog->Print(file3+")");
     // else clog->Print(file3);
