@@ -1,4 +1,5 @@
 #include "PMGValidation/TruthReader.h"
+#include "PMGValidation/utils.h"
 
 #include "xAODRootAccess/Init.h"
 #include "SampleHandler/SampleHandler.h"
@@ -11,55 +12,110 @@
 
 #include <TSystem.h>
 
+#include <iostream>
 #include <string>
+
 using namespace std;
+
+void help() {
+    cout<<"Usage:"
+        <<"TruthPlot [options]"
+        <<"-o --output"      <<"\t"<<" output directory"<<endl
+        <<"-f --filelist"    <<"\t"<<" input filelist"<<endl
+        <<"-i --input-dir"   <<"\t"<<" input directory"<<endl
+        <<"  to be scanned if you do not provide a filelist"<<endl
+        <<"-p --file-pattern"<<"\t"<<" pattern used to scan directory"<<endl
+        <<"-n --num-events"  <<"\t"<<" number of events to process"<<endl
+        <<"-v --verbose"     <<"\t"<<" print more"<<endl
+        <<"--lxbatch"        <<"\t"<<" submit job to lxbatch (currently broken)"<<endl
+        <<endl;
+}
 
 int main( int argc, char* argv[] ) {
 
+    string sampleName;
+    string outputDir;
+    string inputFilelist;
+    string inputDirectory;
+    string inputFilePattern; // used when scanning input directory
+    int numEvents=-1;
+    bool verbose = false;
+    bool lxbatch = false;
 
-  // Take the submit directory from the input if provided:
-  string submitDir = "submitDir";
-  string inputFilePath = gSystem->ExpandPathName ("/data1/atlas/berlendis/Data/4top/");
-  string filename = "DAOD_TRUTH1.mc15_4top.pool.root";
+    for(int i = 1; i < argc; i++) {
+        string opt = argv[i];
+        if(opt=="-s"||opt=="--sample-name") sampleName = argv[++i];
+        else if(opt=="-o"||opt=="--output") outputDir = argv[++i];
+        else if(opt=="-f"||opt=="--filelist") inputFilelist = argv[++i];
+        else if(opt=="-i"||opt=="--input-dir") inputDirectory = argv[++i];
+        else if(opt=="-p"||opt=="--file-pattern") inputFilePattern = argv[++i];
+        else if(opt=="-n"||opt=="--num-events") numEvents = atoi(argv[++i]);
+        else if(opt=="-v"||opt=="--verbose") verbose=true;
+        else if(opt=="--lxbatch") lxbatch=true;
+        else {
+            help();
+            return 1;
+        }
+    }
 
-  if( argc > 1 ) inputFilePath = argv[ 1 ];
-  if( argc > 2 ) filename = argv[ 2 ];
-  if( argc > 3 ) submitDir = argv[ 3 ];
+    if(verbose) {
+        cout<<"being called as "<<commandLineArguments(argc, argv)<<endl;
+        cout<<"Options:"<<endl
+            <<" sample-name '"<<sampleName<<"'"<<endl
+            <<" output '"<<outputDir<<"'"<<endl
+            <<" filelist '"<<inputFilelist<<"'"<<endl
+            <<" input-dir '"<<inputDirectory<<"'"<<endl
+            <<" file-pattern '"<<inputFilePattern<<"'"<<endl
+            <<" num-events '"<<numEvents<<"'"<<endl
+            <<" verbose '"<<verbose<<"'"<<endl
+            <<" lxbatch '"<<lxbatch<<"'"<<endl;
+    }
+    xAOD::Init().ignore(); // Set up the job for xAOD access:
 
-  // Set up the job for xAOD access:
-  xAOD::Init().ignore();
+    SH::SampleHandler sh;
 
-  // Construct the samples to run on:
-  SH::SampleHandler sh;
+    if(not sampleName.size()) {
+        cout<<"required sample name"<<endl;
+        return 1;
+    }
 
-  SH::readFileList(sh, "ttW_sysWgt",
-                   "PMGValidation/filelist/eos/list_eos_user.gerbaudo.truth1.2015-10-05_194329.510066.13TeV_ttW_sysWgt_test3_EXT0.txt");
+    if(not outputDir.size()) {
+        cout<<"required output directory"<<endl;
+        return 1;
+    }
+    mkdirIfNeeded(basedir(outputDir));
 
-  // // use SampleHandler to scan all of the subdirectories of a directory for particular MC single file:
-  // SH::ScanDir().sampleDepth(0).samplePattern( filename ).scan(sh, inputFilePath);
 
-  // Set the name of the input TTree. It's always "CollectionTree"
-  // for xAOD files.
-  sh.setMetaString( "nc_tree", "CollectionTree" );
+    if(inputFilelist.size())
+        SH::readFileList(sh, sampleName, inputFilelist);
+    else if(inputDirectory.size() && inputFilePattern.size())
+        SH::ScanDir().sampleDepth(0).samplePattern(inputFilePattern).scan(sh, inputDirectory);
+    else {
+        cout<<"required input (filelist or directory)"<<endl;
+        return 1;
+    }
 
-  // Print what we found:
-  sh.print();
+    sh.setMetaString( "nc_tree", "CollectionTree" );
+    if(verbose)
+        sh.print();
 
-  // Create an EventLoop job:
-  EL::Job job;
-  job.sampleHandler( sh );
-  job.options()->setDouble (EL::Job::optMaxEvents, 50);
+    EL::Job job;
+    job.sampleHandler( sh );
+    if(numEvents>0)
+        job.options()->setDouble (EL::Job::optMaxEvents, numEvents);
 
-  // Add our analysis to the job:
-  TruthReader* aTruth = new TruthReader();
-  job.algsAdd( aTruth );
+    TruthReader* aTruth = new TruthReader();
+    aTruth->verbose = verbose;
+    job.algsAdd( aTruth );
 
-  // Run the job using the local/direct driver:
-  EL::DirectDriver driver;
-  driver.submit( job, submitDir );
+    cout<<"outputDir "<<outputDir<<endl;
+    if(lxbatch) {
+        EL::LSFDriver driver;
+        driver.submit( job, outputDir );
+    } else {
+        EL::DirectDriver driver;
+        driver.submit( job, outputDir );
+    }
 
-  // EL::LSFDriver driver;
-  // driver.submit( job, submitDir );
-
-  return 0;
+    return 0;
 }

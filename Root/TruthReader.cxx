@@ -33,7 +33,33 @@ using namespace std;
 ClassImp(TruthReader)
 
 
-TruthReader :: TruthReader ()
+TruthReader :: TruthReader():
+h_jetN(nullptr),
+    h_jetPt(nullptr),
+    h_jetE(nullptr),
+    h_jetEta(nullptr),
+    h_jetPhi(nullptr),
+    h_bjetN(nullptr),
+    h_bjetPt(nullptr),
+    h_bjetE(nullptr),
+    h_bjetEta(nullptr),
+    h_bjetPhi(nullptr),
+    h_electronN(nullptr),
+    h_electronPt(nullptr),
+    h_electronE(nullptr),
+    h_electronEta(nullptr),
+    h_electronPhi(nullptr),
+    h_electronQ(nullptr),
+    h_muonN(nullptr),
+    h_muonPt(nullptr),
+    h_muonE(nullptr),
+    h_muonEta(nullptr),
+    h_muonPhi(nullptr),
+    h_muonQ(nullptr),
+    h_meff(nullptr),
+    h_met(nullptr),
+    h_metPhi(nullptr),
+    verbose(false)
 {
   // Here you put any code for the base initialization of variables,
   // e.g. initialize all pointers to 0.  Note that you should only put
@@ -194,7 +220,7 @@ EL::StatusCode TruthReader :: execute ()
 
   const xAOD::TruthEventContainer* truthEvents = 0;
   EL_RETURN_CHECK("execute()", event->retrieve(truthEvents, "TruthEvents"));
-  if(truthEvents){
+  if(false && truthEvents){
       xAOD::TruthEventContainer::const_iterator te_itr = truthEvents->begin();
       xAOD::TruthEventContainer::const_iterator te_end = truthEvents->end();
       cout<<"TruthEvents : ";
