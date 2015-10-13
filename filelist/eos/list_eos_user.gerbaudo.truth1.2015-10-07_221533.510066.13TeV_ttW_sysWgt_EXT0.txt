@@ -1,0 +1,16 @@
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000001.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000002.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000003.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000004.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000005.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000006.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000007.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000008.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000009.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000010.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000011.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000012.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000013.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000016.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000017.DAOD_TRUTH1.pool.root
+root://eosatlas.cern.ch//eos/atlas/user/g/gerbaudo/ss3l/ttV//user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/user.gerbaudo.6648972.EXT0._000018.DAOD_TRUTH1.pool.root
