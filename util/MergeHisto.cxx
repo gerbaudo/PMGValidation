@@ -19,17 +19,19 @@ using namespace std;
 
 int main( int argc, char* argv[] ) {
 
-  if( argc != 4 ) {
-    std::cout << " ERROR : WRONG NUMBER OF ARGUMENTS " << std::endl;
+  if( argc != 6 ) {
+      cout<<"usage :"<<endl
+          <<"MergeHisto input1.root label1 input2.root label2 output.pdf"<<endl;
     return 0;
   }
 
   SetAtlasStyle();
 
-
-  TString file1 = argv[ 1 ];
-  TString file2 = argv[ 2 ];
-  TString file3 = argv[ 3 ];
+  TString file1  = argv[1];
+  TString label1 = argv[2];
+  TString file2  = argv[3];
+  TString label2 = argv[4];
+  TString outputFilename = argv[5];
 
   TFile *f1 = new TFile( file1 );
   TFile *f2 = new TFile( file2 );
@@ -39,22 +41,22 @@ int main( int argc, char* argv[] ) {
                              "h_electronN","h_electronPt","h_electronE","h_electronEta","h_electronPhi","h_electronQ",
                              "h_muonN","h_muonPt","h_muonE","h_muonEta","h_muonPhi","h_muonQ",
                              "h_met","h_metPhi","h_meff"};
+  size_t histo_counter = 0;
   for(auto &h_name : h_names){
 
-    // Object
-    TH1F  *h1 = (TH1F*)f1->Get( h_name );
+    TH1F  *h1 = static_cast<TH1F*(f1->Get( h_name ));
     h1->SetLineColor(kBlue+2);
     h1->GetXaxis()->SetLabelOffset(0.05);
 
-    TH1F  *h2 = (TH1F*)f2->Get( h_name );
+    TH1F  *h2 = static_cast<TH1F*>(f2->Get( h_name ));
     h2->SetMarkerStyle(1);
     h2->SetLineColor(kRed+2);
 
     TLegend *legend=new TLegend(0.90,0.90,0.80,0.80);
     legend->SetTextFont(62);
     legend->SetTextSize(0.035);
-    legend->AddEntry(h1, "mc12","l");
-    legend->AddEntry(h2, "mc15","l");
+    legend->AddEntry(h1, label1,"l");
+    legend->AddEntry(h2, label2,"l");
 
     TCanvas *c = new TCanvas( h_name , h_name );
     TPad* p1 = new TPad("p1","p1",0.0,0.25,1.0,1.0,-22);
@@ -84,7 +86,7 @@ int main( int argc, char* argv[] ) {
     href->SetMaximum(1.75);
     href->SetMinimum(0.25);
 
-    href->GetYaxis()->SetTitle("MC15/MC12");
+    href->GetYaxis()->SetTitle(label1+" / "+label2);
 
     href->GetXaxis()->SetLabelSize(0.17);
     href->GetYaxis()->SetNdivisions(505);
@@ -102,36 +104,32 @@ int main( int argc, char* argv[] ) {
     hR->SetMarkerStyle(1);
 
     for (Int_t ik = 1; ik <= hR->GetXaxis()->GetNbins(); ik++) {
-      if(h1->GetBinContent(ik)>0. && h2->GetBinContent(ik)>0.)
-        hR->SetBinError( ik , hR->GetBinContent(ik) * ( (h1->GetBinError(ik)/h1->GetBinContent(ik)) + (h2->GetBinError(ik)/h2->GetBinContent(ik)) ) );
+        if(h1->GetBinContent(ik)>0. && h2->GetBinContent(ik)>0.)
+        hR->SetBinError( ik ,
+                         hR->GetBinContent(ik) *
+                         ( (h1->GetBinError(ik)/h1->GetBinContent(ik)) +
+                           (h2->GetBinError(ik)/h2->GetBinContent(ik)) ) );
     }
 
     hR->Draw("HIST E SAME");
 
     // Write
+    bool outputPdf = outputFilename.EndsWith(".pdf");
+    bool outputPng = outputFilename.EndsWith("/"); // if given out dir, save individual png
+    if(outputPdf) {
+        bool first_histo = histo_counter==0;
+        bool last_histo = histo_counter==h_names.size()-1;
+        c->Print(outputFilename+(first_histo ? "(" :
+                                 last_histo ? ")" :  ""));
+    } else if (outputPng) {
+        TString outputDir = outputFilename;
+        c->Print(outputDir + h_name + ".png");
 
-    c->Print( h_name + ".png" );
-
-    // if(i==0) c->Print(file3+"(");
-    // else c->Print(file3);
-
-    // c->Write();
-
-    TCanvas *clog = new TCanvas( h_name+"_log" , h_name+"_log" );
-
-    TPad *p1log = (TPad*)p1->Clone();
-    p1log->SetLogy(1);
-
-    p1log->Draw();
-    p2->Draw();
-
-    clog->Print( h_name + "_log.png" );
-
-    // if(i==24) clog->Print(file3+")");
-    // else clog->Print(file3);
-
-    // clog->Write();
-
-  }
+    } else {
+        cout<<"Invalid output choice '"<<outputFilename<<"'"<<endl
+            <<"must be either a '*.pdf' or a directory '*/' (-> save png)"<<endl;
+    }
+    histo_counter++;
+  } // for(h_name)
 
 }
