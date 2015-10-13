@@ -27,6 +27,8 @@ void help() {
         <<"-p --file-pattern"<<"\t"<<" pattern used to scan directory"<<endl
         <<"-n --num-events"  <<"\t"<<" number of events to process"<<endl
         <<"-v --verbose"     <<"\t"<<" print more"<<endl
+        <<"-w --weight-index"<<"\t"<<" weight index from 'TruthEvents'"<<endl
+        <<"  default =-1, i.e. no event weight"<<endl
         <<"--lxbatch"        <<"\t"<<" submit job to lxbatch (currently broken)"<<endl
         <<endl;
 }
@@ -40,6 +42,7 @@ int main( int argc, char* argv[] ) {
     string inputFilePattern; // used when scanning input directory
     int numEvents=-1;
     bool verbose = false;
+    int weightIndex=-1;
     bool lxbatch = false;
 
     for(int i = 1; i < argc; i++) {
@@ -51,6 +54,7 @@ int main( int argc, char* argv[] ) {
         else if(opt=="-p"||opt=="--file-pattern") inputFilePattern = argv[++i];
         else if(opt=="-n"||opt=="--num-events") numEvents = atoi(argv[++i]);
         else if(opt=="-v"||opt=="--verbose") verbose=true;
+        else if(opt=="-w"||opt=="--weight-index") weightIndex = atoi(argv[++i]);
         else if(opt=="--lxbatch") lxbatch=true;
         else {
             help();
@@ -68,6 +72,7 @@ int main( int argc, char* argv[] ) {
             <<" file-pattern '"<<inputFilePattern<<"'"<<endl
             <<" num-events '"<<numEvents<<"'"<<endl
             <<" verbose '"<<verbose<<"'"<<endl
+            <<" weightIndex '"<<weightIndex<<"'"<<endl
             <<" lxbatch '"<<lxbatch<<"'"<<endl;
     }
     xAOD::Init().ignore(); // Set up the job for xAOD access:
@@ -106,6 +111,7 @@ int main( int argc, char* argv[] ) {
 
     TruthReader* aTruth = new TruthReader();
     aTruth->verbose = verbose;
+    aTruth->weightIndex = weightIndex;
     job.algsAdd( aTruth );
 
     cout<<"outputDir "<<outputDir<<endl;

@@ -59,7 +59,9 @@ h_jetN(nullptr),
     h_meff(nullptr),
     h_met(nullptr),
     h_metPhi(nullptr),
-    verbose(false)
+    verbose(false),
+    weightIndex(-1),
+    printedEvents(0)
 {
   // Here you put any code for the base initialization of variables,
   // e.g. initialize all pointers to 0.  Note that you should only put
@@ -210,6 +212,7 @@ EL::StatusCode TruthReader :: execute ()
   // code will go.
 
   xAOD::TEvent* event = wk()->xaodEvent();
+  double eventWeight = 1.0;
 
   //----------------------------
   // Event information
@@ -225,12 +228,27 @@ EL::StatusCode TruthReader :: execute ()
       xAOD::TruthEventContainer::const_iterator te_end = truthEvents->end();
       cout<<"TruthEvents : ";
       for(; te_itr!=te_end; ++te_itr) {
-          cout<<"TruthEvent::weights() : ";
+          cout<<"TruthEvent::weights["<<(*te_itr)->weights().size()<<"] : ";
           for(auto w : (*te_itr)->weights())
               cout<<" "<<w;
           cout<<endl;
       }
-      cout<<endl;
+  }
+  if(truthEvents and weightIndex >= 0){
+      if(truthEvents->size()!=1)
+          Error("TruthReader::execute()", XAOD_MESSAGE( "do not know how to process %d 'TruthEvents'"),
+                static_cast<int>(truthEvents->size()));
+      xAOD::TruthEventContainer::const_iterator tec = truthEvents->begin();
+      const vector<float> &weights = (*tec)->weights();
+      int weightsSize = static_cast<int>(weights.size());
+      if(weightIndex > weightsSize)
+          Error("TruthReader::execute()", XAOD_MESSAGE( "invalid weightIndex %d (max %d)"), weightIndex, weightsSize);
+      eventWeight = weights[weightIndex];
+      const int maxPrintEvents = 10;
+      if(verbose && printedEvents<maxPrintEvents) {
+          cout<<"eventWeight "<<eventWeight<<endl;
+          printedEvents++;
+      }
   }
 
   //----------------------------
@@ -297,8 +315,8 @@ EL::StatusCode TruthReader :: execute ()
 
   xAOD::MissingETContainer::const_iterator met_it = met->begin();
 
-  h_met->Fill( (*met_it)->met() * 0.001 );
-  h_metPhi->Fill( (*met_it)->phi() );
+  h_met->Fill( (*met_it)->met() * 0.001, eventWeight );
+  h_metPhi->Fill( (*met_it)->phi(), eventWeight );
 
   double meff = (*met_it)->met() * 0.001 ;
 
@@ -354,56 +372,56 @@ EL::StatusCode TruthReader :: execute ()
   // Fill Histograms
   //---------------------------
 
-  h_jetN->Fill( v_jet.size() );
+  h_jetN->Fill( v_jet.size() , eventWeight);
   const double mev2gev = 1.0e-3;
   int N_bjet =0;
   for( int i_jet = 0 ; i_jet < (int)v_jet.size() ; i_jet++ ) {
 
-    h_jetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev);
-    h_jetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev);
-    h_jetEta->Fill( v_jet.at(i_jet)->eta() );
-    h_jetPhi->Fill( v_jet.at(i_jet)->phi() );
+      h_jetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev, eventWeight);
+      h_jetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev, eventWeight);
+      h_jetEta->Fill( v_jet.at(i_jet)->eta() , eventWeight);
+      h_jetPhi->Fill( v_jet.at(i_jet)->phi() , eventWeight);
 
     meff += ( v_jet.at(i_jet)->pt() ) * mev2gev ;
 
     if( abs( v_jet.at(i_jet)->auxdata<int>("PartonTruthLabelID") ) != 5 ) continue;
 
-    h_bjetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev);
-    h_bjetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev);
-    h_bjetEta->Fill( v_jet.at(i_jet)->eta() );
-    h_bjetPhi->Fill( v_jet.at(i_jet)->phi() );
+    h_bjetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev, eventWeight);
+    h_bjetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev, eventWeight);
+    h_bjetEta->Fill( v_jet.at(i_jet)->eta() , eventWeight);
+    h_bjetPhi->Fill( v_jet.at(i_jet)->phi() , eventWeight);
 
     N_bjet++;
   }
 
-  h_bjetN->Fill( N_bjet );
-  h_electronN->Fill( v_electron.size() );
+  h_bjetN->Fill( N_bjet , eventWeight);
+  h_electronN->Fill( v_electron.size() , eventWeight);
 
   for( int i_electron = 0 ; i_electron < (int)v_electron.size() ; i_electron++ ) {
 
-    h_electronPt->Fill( ( v_electron.at(i_electron)->pt()) * mev2gev);
-    h_electronE->Fill( ( v_electron.at(i_electron)->e()) * mev2gev);
-    h_electronEta->Fill( v_electron.at(i_electron)->eta() );
-    h_electronPhi->Fill( v_electron.at(i_electron)->phi() );
-    h_electronQ->Fill( v_electron.at(i_electron)->charge()/2 );
+      h_electronPt->Fill( ( v_electron.at(i_electron)->pt()) * mev2gev, eventWeight);
+      h_electronE->Fill( ( v_electron.at(i_electron)->e()) * mev2gev, eventWeight);
+      h_electronEta->Fill( v_electron.at(i_electron)->eta() , eventWeight);
+      h_electronPhi->Fill( v_electron.at(i_electron)->phi() , eventWeight);
+      h_electronQ->Fill( v_electron.at(i_electron)->charge()/2 , eventWeight);
 
     meff += ( v_electron.at(i_electron)->pt() ) * mev2gev ;
   }
 
-  h_muonN->Fill( v_muon.size() );
+  h_muonN->Fill( v_muon.size() , eventWeight);
 
   for( int i_muon = 0 ; i_muon < (int)v_muon.size() ; i_muon++ ) {
 
-    h_muonPt->Fill( ( v_muon.at(i_muon)->pt()) * mev2gev);
-    h_muonE->Fill( ( v_muon.at(i_muon)->e()) * mev2gev);
-    h_muonEta->Fill( v_muon.at(i_muon)->eta() );
-    h_muonPhi->Fill( v_muon.at(i_muon)->phi() );
-    h_muonQ->Fill( v_muon.at(i_muon)->charge()/2 );
+      h_muonPt->Fill( ( v_muon.at(i_muon)->pt()) * mev2gev, eventWeight);
+      h_muonE->Fill( ( v_muon.at(i_muon)->e()) * mev2gev, eventWeight);
+      h_muonEta->Fill( v_muon.at(i_muon)->eta() , eventWeight);
+      h_muonPhi->Fill( v_muon.at(i_muon)->phi() , eventWeight);
+      h_muonQ->Fill( v_muon.at(i_muon)->charge()/2 , eventWeight);
 
     meff += ( v_muon.at(i_muon)->pt() ) * mev2gev ;
   }
 
-  h_meff->Fill( meff );
+  h_meff->Fill( meff , eventWeight);
 
   return EL::StatusCode::SUCCESS;
 }

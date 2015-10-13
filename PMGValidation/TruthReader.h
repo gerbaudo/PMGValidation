@@ -51,6 +51,8 @@ private:
 
 public:
   bool verbose;
+  int weightIndex;
+  size_t printedEvents;
   // float cutValue;
 
 
