@@ -117,7 +117,8 @@ int main( int argc, char* argv[] ) {
     cout<<"outputDir "<<outputDir<<endl;
     if(lxbatch) {
         EL::LSFDriver driver;
-        driver.submit( job, outputDir );
+        driver.submitOnly( job, outputDir );
+        EL::LSFDriver::wait(outputDir);
     } else {
         EL::DirectDriver driver;
         driver.submit( job, outputDir );
