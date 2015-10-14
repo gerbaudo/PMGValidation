@@ -1,6 +1,8 @@
 #ifndef PMGValidation_TruthReader_H
 #define PMGValidation_TruthReader_H
 
+#include <map>
+#include <string>
 #include <stdlib.h>
 
 #include <TH1.h>
@@ -13,41 +15,57 @@ class TruthReader : public EL::Algorithm
   // that way they can be set directly from CINT and python.
 
 private:
-
-  // Jet
-  TH1 *h_jetN; //!
-  TH1 *h_jetPt; //!
-  TH1 *h_jetE; //!
-  TH1 *h_jetEta; //!
-  TH1 *h_jetPhi; //!
-
-  // BJet
-  TH1 *h_bjetN; //!
-  TH1 *h_bjetPt; //!
-  TH1 *h_bjetE; //!
-  TH1 *h_bjetEta; //!
-  TH1 *h_bjetPhi; //!
-
-  // Electron
-  TH1 *h_electronN; //!
-  TH1 *h_electronPt; //!
-  TH1 *h_electronE; //!
-  TH1 *h_electronEta; //!
-  TH1 *h_electronPhi; //!
-  TH1 *h_electronQ; //!
-
-  // Muon
-  TH1 *h_muonN; //!
-  TH1 *h_muonPt; //!
-  TH1 *h_muonE; //!
-  TH1 *h_muonEta; //!
-  TH1 *h_muonPhi; //!
-  TH1 *h_muonQ; //!
-
-  // Global Variable
-  TH1 *h_meff; //!
-  TH1 *h_met; //!
-  TH1 *h_metPhi; //!
+  struct SelectionHistograms {
+    TH1 *jetN; // Jet
+    TH1 *jetPt;
+    TH1 *jetE;
+    TH1 *jetEta;
+    TH1 *jetPhi;
+    TH1 *bjetN; // BJet
+    TH1 *bjetPt;
+    TH1 *bjetE;
+    TH1 *bjetEta;
+    TH1 *bjetPhi;
+    TH1 *electronN; // Electron
+    TH1 *electronPt;
+    TH1 *electronE;
+    TH1 *electronEta;
+    TH1 *electronPhi;
+    TH1 *electronQ;
+    TH1 *muonN; // Muon
+    TH1 *muonPt;
+    TH1 *muonE;
+    TH1 *muonEta;
+    TH1 *muonPhi;
+    TH1 *muonQ;
+    TH1 *meff; // Global Variable
+    TH1 *met;
+    TH1 *metPhi;
+    TH1 *numEvents;
+    std::vector<TH1*> histograms() {
+      return {
+        jetN, jetPt, jetE, jetEta, jetPhi,
+          bjetN, bjetPt, bjetE, bjetEta, bjetPhi,
+          electronN, electronPt, electronE, electronEta, electronPhi, electronQ,
+          muonN, muonPt, muonE, muonEta, muonPhi, muonQ,
+          meff, met, metPhi, numEvents
+          };
+    }
+    void set_to_nullptr() {
+      for(auto &h : histograms())
+        h = nullptr;
+    }
+    SelectionHistograms() { set_to_nullptr(); }
+    void clone_with_suffix(SelectionHistograms &input, EL::Worker *worker, TString name_suffix, TString title_suffix);
+    void add_histograms_to_output(EL::Worker *worker);
+  };
+  /// for each SR, clone the histograms above and store them in the maps below
+  void generateSrHistograms();
+  SelectionHistograms m_inclusive_histos; //!
+  SelectionHistograms m_sr3b_histos; //!
+  SelectionHistograms m_sr1b_histos; //!
+  SelectionHistograms m_sr0b5j_histos; //!
+  SelectionHistograms m_sr0b3j_histos; //!
 
 public:
   bool verbose;

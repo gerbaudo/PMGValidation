@@ -17,6 +17,8 @@
 #include <iostream>
 using namespace std;
 
+const double mev2gev = 1.0e-3;
+
 /// Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )			   \
   do {                                                     \
@@ -34,31 +36,6 @@ ClassImp(TruthReader)
 
 
 TruthReader :: TruthReader():
-h_jetN(nullptr),
-    h_jetPt(nullptr),
-    h_jetE(nullptr),
-    h_jetEta(nullptr),
-    h_jetPhi(nullptr),
-    h_bjetN(nullptr),
-    h_bjetPt(nullptr),
-    h_bjetE(nullptr),
-    h_bjetEta(nullptr),
-    h_bjetPhi(nullptr),
-    h_electronN(nullptr),
-    h_electronPt(nullptr),
-    h_electronE(nullptr),
-    h_electronEta(nullptr),
-    h_electronPhi(nullptr),
-    h_electronQ(nullptr),
-    h_muonN(nullptr),
-    h_muonPt(nullptr),
-    h_muonE(nullptr),
-    h_muonEta(nullptr),
-    h_muonPhi(nullptr),
-    h_muonQ(nullptr),
-    h_meff(nullptr),
-    h_met(nullptr),
-    h_metPhi(nullptr),
     verbose(false),
     weightIndex(-1),
     printedEvents(0)
@@ -98,66 +75,42 @@ EL::StatusCode TruthReader :: histInitialize ()
   // beginning on each worker node, e.g. create histograms and output
   // trees.  This method gets called before any input files are
   // connected.
-
+    SelectionHistograms &h = m_inclusive_histos;
   // Jet
-  h_jetN   = new TH1F("h_jetN", "h_jetN", 25, 0, 25);
-  h_jetPt  = new TH1F("h_jetPt", "h_jetPt", 50, 0, 1000);
-  h_jetE   = new TH1F("h_jetE", "h_jetE", 50, 0, 1200);
-  h_jetEta = new TH1F("h_jetEta", "h_jetEta", 50, -5, 5);
-  h_jetPhi = new TH1F("h_jetPhi", "h_jetPhi", 20, 0, 3.14);
-  wk()->addOutput (h_jetN);
-  wk()->addOutput (h_jetPt);
-  wk()->addOutput (h_jetE);
-  wk()->addOutput (h_jetEta);
-  wk()->addOutput (h_jetPhi);
-
+  h.jetN   = new TH1F("h_jetN", "h_jetN", 25, 0, 25);
+  h.jetPt  = new TH1F("h_jetPt", "h_jetPt", 50, 0, 1000);
+  h.jetE   = new TH1F("h_jetE", "h_jetE", 50, 0, 1200);
+  h.jetEta = new TH1F("h_jetEta", "h_jetEta", 50, -5, 5);
+  h.jetPhi = new TH1F("h_jetPhi", "h_jetPhi", 20, 0, 3.14);
   // BJet
-  h_bjetN   = new TH1F("h_bjetN", "h_bjetN", 8, 0, 8);
-  h_bjetPt  = new TH1F("h_bjetPt", "h_bjetPt", 50, 0, 800);
-  h_bjetE   = new TH1F("h_bjetE", "h_bjetE", 50, 0, 1000);
-  h_bjetEta = new TH1F("h_bjetEta", "h_bjetEta", 50, -5, 5);
-  h_bjetPhi = new TH1F("h_bjetPhi", "h_bjetPhi", 20, 0, 3.14);
-  wk()->addOutput (h_bjetN);
-  wk()->addOutput (h_bjetPt);
-  wk()->addOutput (h_bjetE);
-  wk()->addOutput (h_bjetEta);
-  wk()->addOutput (h_bjetPhi);
-
+  h.bjetN   = new TH1F("h_bjetN", "h_bjetN", 8, 0, 8);
+  h.bjetPt  = new TH1F("h_bjetPt", "h_bjetPt", 50, 0, 800);
+  h.bjetE   = new TH1F("h_bjetE", "h_bjetE", 50, 0, 1000);
+  h.bjetEta = new TH1F("h_bjetEta", "h_bjetEta", 50, -5, 5);
+  h.bjetPhi = new TH1F("h_bjetPhi", "h_bjetPhi", 20, 0, 3.14);
   // Electron
-  h_electronN   = new TH1F("h_electronN", "h_electronN", 7, 0, 7);
-  h_electronPt  = new TH1F("h_electronPt", "h_electronPt", 50, 0, 300);
-  h_electronE   = new TH1F("h_electronE", "h_electronE", 50, 0, 300);
-  h_electronEta = new TH1F("h_electronEta", "h_electronEta", 50, -3, 3);
-  h_electronPhi = new TH1F("h_electronPhi", "h_electronPhi", 20, 0, 3.14);
-  h_electronQ   = new TH1F("h_electronQ", "h_electronQ", 2, -1, 1);
-  wk()->addOutput (h_electronN);
-  wk()->addOutput (h_electronPt);
-  wk()->addOutput (h_electronE);
-  wk()->addOutput (h_electronEta);
-  wk()->addOutput (h_electronPhi);
-  wk()->addOutput (h_electronQ);
-
+  h.electronN   = new TH1F("h_electronN", "h_electronN", 7, 0, 7);
+  h.electronPt  = new TH1F("h_electronPt", "h_electronPt", 50, 0, 300);
+  h.electronE   = new TH1F("h_electronE", "h_electronE", 50, 0, 300);
+  h.electronEta = new TH1F("h_electronEta", "h_electronEta", 50, -3, 3);
+  h.electronPhi = new TH1F("h_electronPhi", "h_electronPhi", 20, 0, 3.14);
+  h.electronQ   = new TH1F("h_electronQ", "h_electronQ", 2, -1, 1);
   // Muon
-  h_muonN   = new TH1F("h_muonN", "h_muonN", 7, 0, 7);
-  h_muonPt  = new TH1F("h_muonPt", "h_muonPt", 50, 0, 300);
-  h_muonE   = new TH1F("h_muonE", "h_muonE", 50, 0, 300);
-  h_muonEta = new TH1F("h_muonEta", "h_muonEta", 50, -3, 3);
-  h_muonPhi = new TH1F("h_muonPhi", "h_muonPhi", 20, 0, 3.14);
-  h_muonQ   = new TH1F("h_muonQ", "h_muonQ", 2, -1, 1);
-  wk()->addOutput (h_muonN);
-  wk()->addOutput (h_muonPt);
-  wk()->addOutput (h_muonE);
-  wk()->addOutput (h_muonEta);
-  wk()->addOutput (h_muonPhi);
-  wk()->addOutput (h_muonQ);
-
+  h.muonN   = new TH1F("h_muonN", "h_muonN", 7, 0, 7);
+  h.muonPt  = new TH1F("h_muonPt", "h_muonPt", 50, 0, 300);
+  h.muonE   = new TH1F("h_muonE", "h_muonE", 50, 0, 300);
+  h.muonEta = new TH1F("h_muonEta", "h_muonEta", 50, -3, 3);
+  h.muonPhi = new TH1F("h_muonPhi", "h_muonPhi", 20, 0, 3.14);
+  h.muonQ   = new TH1F("h_muonQ", "h_muonQ", 2, -1, 1);
   // Global Variable
-  h_meff   = new TH1F("h_meff", "h_meff", 50, 0, 3000);
-  h_met    = new TH1F("h_met", "h_met", 50, 0, 500);
-  h_metPhi = new TH1F("h_metPhi", "h_metPhi", 20, 0, 3.14);
-  wk()->addOutput (h_meff);
-  wk()->addOutput (h_met);
-  wk()->addOutput (h_metPhi);
+  h.meff   = new TH1F("h_meff", "h_meff", 50, 0, 3000);
+  h.met    = new TH1F("h_met", "h_met", 50, 0, 500);
+  h.metPhi = new TH1F("h_metPhi", "h_metPhi", 20, 0, 3.14);
+  h.numEvents = new TH1F("h_numEvents", "h_numEvents", 1, 0.5, 1.5);
+
+  h.add_histograms_to_output(wk());
+
+  generateSrHistograms();
 
   return EL::StatusCode::SUCCESS;
 }
@@ -202,7 +155,42 @@ EL::StatusCode TruthReader :: initialize ()
   return EL::StatusCode::SUCCESS;
 }
 
+template <class Container>
+double sumPt(Container &container)
+{
+    double totPt = 0.0;
+    for(const auto *e : container)
+        totPt += (e->pt() * mev2gev);
+    return totPt;
+}
 
+size_t count_samesign_leptons(const std::vector<xAOD::TruthParticle*> &electrons, const std::vector<xAOD::TruthParticle*> &muons)
+{
+    size_t number_of_leptons=0;
+    std::vector<xAOD::TruthParticle*> leptons;
+    leptons.reserve(electrons.size()+muons.size());
+    leptons.insert(leptons.end(), electrons.begin(), electrons.end());
+    leptons.insert(leptons.end(), muons.begin(), muons.end());
+    size_t nplus = 0;
+    size_t nminus = 0;
+    for(auto l : leptons) {
+        if(l->pt()*mev2gev>20.0) {
+            if(l->charge()>0) nplus++;
+            if(l->charge()<0) nminus++;
+        }
+    }
+    bool samesign = (nplus>1 || nminus>1);
+    if(samesign) { // count potential third leptons above 10GeV
+        number_of_leptons=2;
+        for(auto l : leptons) {
+            double pt = l->pt()*mev2gev;
+            if(pt<20.0 && pt>10.0) {
+                number_of_leptons++;
+            }
+        }
+    }
+    return number_of_leptons;
+}
 
 EL::StatusCode TruthReader :: execute ()
 {
@@ -210,6 +198,8 @@ EL::StatusCode TruthReader :: execute ()
   // events, e.g. read input variables, apply cuts, and fill
   // histograms and trees.  This is where most of your actual analysis
   // code will go.
+
+    SelectionHistograms &h = m_inclusive_histos;
 
   xAOD::TEvent* event = wk()->xaodEvent();
   double eventWeight = 1.0;
@@ -220,6 +210,7 @@ EL::StatusCode TruthReader :: execute ()
   const xAOD::EventInfo* eventInfo = 0;
   EL_RETURN_CHECK("execute",event->retrieve( eventInfo, "EventInfo"));
   //  std::cout << eventInfo->eventNumber() << std::endl;
+  eventWeight *= eventInfo->mcEventWeight();
 
   const xAOD::TruthEventContainer* truthEvents = 0;
   EL_RETURN_CHECK("execute()", event->retrieve(truthEvents, "TruthEvents"));
@@ -315,11 +306,6 @@ EL::StatusCode TruthReader :: execute ()
 
   xAOD::MissingETContainer::const_iterator met_it = met->begin();
 
-  h_met->Fill( (*met_it)->met() * 0.001, eventWeight );
-  h_metPhi->Fill( (*met_it)->phi(), eventWeight );
-
-  double meff = (*met_it)->met() * 0.001 ;
-
   //----------------------------
   // Overlap Removal
   //---------------------------
@@ -367,61 +353,95 @@ EL::StatusCode TruthReader :: execute ()
       }
     }
   }
+  std::vector<xAOD::Jet*> v_bjet;
+  for(const auto jet : v_jet) {
+      if(abs( jet->auxdata<int>("PartonTruthLabelID") ) == 5)
+          v_bjet.push_back(jet);
+  }
+
+  double etmiss = (*met_it)->met() * mev2gev;
+  double etmissPhi = (*met_it)->phi();
+  double meff = etmiss + sumPt(v_jet) + sumPt(v_electron) + sumPt(v_muon);
+  size_t num_ss_leptons = count_samesign_leptons(v_electron, v_muon);
+  size_t num_jet20_b = std::count_if(v_bjet.begin(), v_bjet.end(),
+                                     [](const xAOD::Jet* j) {return j->pt()*mev2gev >20.0;});
+  size_t num_jet50 = std::count_if(v_jet.begin(), v_jet.end(),
+                                   [](const xAOD::Jet* j) {return j->pt()*mev2gev >50.0;});
 
   //----------------------------
   // Fill Histograms
   //---------------------------
 
-  h_jetN->Fill( v_jet.size() , eventWeight);
-  const double mev2gev = 1.0e-3;
-  int N_bjet =0;
-  for( int i_jet = 0 ; i_jet < (int)v_jet.size() ; i_jet++ ) {
+  struct FillJetHistos {
+      void operator()(const std::vector<xAOD::Jet*> &jets, TH1 *n, TH1 *pt, TH1 *e, TH1 *eta, TH1 *phi, double weight) {
+          n->Fill(jets.size(), weight);
+          for(const auto jet : jets) {
+              pt->Fill( ( jet->pt()) * mev2gev, weight);
+              e->Fill( ( jet->e()) * mev2gev, weight);
+              eta->Fill( jet->eta() , weight);
+              phi->Fill( jet->phi() , weight);
+          }
+      }
+  };
 
-      h_jetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev, eventWeight);
-      h_jetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev, eventWeight);
-      h_jetEta->Fill( v_jet.at(i_jet)->eta() , eventWeight);
-      h_jetPhi->Fill( v_jet.at(i_jet)->phi() , eventWeight);
+  struct FillLeptonHistos {
+      void operator()(const std::vector<xAOD::TruthParticle*> &leptons,
+                      TH1 *n, TH1 *pt, TH1 *e, TH1 *eta, TH1 *phi, TH1* q,
+                      double weight) {
+          n->Fill( leptons.size() , weight);
+          for(const auto lep : leptons) {
+              pt->Fill( ( lep->pt()) * mev2gev, weight);
+              e->Fill( ( lep->e()) * mev2gev, weight);
+              eta->Fill( lep->eta() , weight);
+              phi->Fill( lep->phi() , weight);
+              q->Fill( lep->charge()/2 , weight);
+          }
+      }
+  };
 
-    meff += ( v_jet.at(i_jet)->pt() ) * mev2gev ;
+  bool pass_sr3b   = (num_ss_leptons>=2 && num_jet20_b >=3                 && etmiss>100.0 && meff>600.0);
+  bool pass_sr1b   = (num_ss_leptons>=2 && num_jet20_b >=1 && num_jet50>=4 && etmiss>100.0 && meff>600.0);
+  bool pass_sr0b5j = (num_ss_leptons>=2 && num_jet20_b ==0 && num_jet50>=5 && etmiss>100.0 && meff>600.0);
+  bool pass_sr0b3j = (num_ss_leptons>=3 && num_jet20_b ==0 && num_jet50>=3 && etmiss>100.0 && meff>600.0);
 
-    if( abs( v_jet.at(i_jet)->auxdata<int>("PartonTruthLabelID") ) != 5 ) continue;
+  struct FillHistos {
+      void operator()(SelectionHistograms &h,
+                      const std::vector<xAOD::Jet*> &jets,
+                      const std::vector<xAOD::Jet*> &bjets,
+                      const std::vector<xAOD::TruthParticle*> &electrons,
+                      const std::vector<xAOD::TruthParticle*> &muons,
+                      double &etmiss,
+                      double &etmissPhi,
+                      double &meff,
+                      double &weight) {
 
-    h_bjetPt->Fill( ( v_jet.at(i_jet)->pt()) * mev2gev, eventWeight);
-    h_bjetE->Fill( ( v_jet.at(i_jet)->e()) * mev2gev, eventWeight);
-    h_bjetEta->Fill( v_jet.at(i_jet)->eta() , eventWeight);
-    h_bjetPhi->Fill( v_jet.at(i_jet)->phi() , eventWeight);
+      h.numEvents->Fill(1.0);
+      FillJetHistos()(jets, h.jetN, h.jetPt, h.jetE, h.jetEta, h.jetPhi, weight);
+      FillJetHistos()(bjets, h.bjetN, h.bjetPt, h.bjetE, h.bjetEta, h.bjetPhi, weight);
+      FillLeptonHistos()(electrons, h.electronN, h.electronPt, h.electronE, h.electronEta, h.electronPhi, h.electronQ, weight);
+      FillLeptonHistos()(muons, h.muonN, h.muonPt, h.muonE, h.muonEta, h.muonPhi, h.muonQ, weight);
+      h.met->Fill(etmiss, weight );
+      h.metPhi->Fill(etmissPhi, weight );
+      h.meff->Fill(meff , weight);
+      }
+  } fillHistos;
 
-    N_bjet++;
+  if(true){
+      fillHistos(m_inclusive_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+  }
+  if(pass_sr3b){
+      fillHistos(m_sr3b_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+  }
+  if(pass_sr1b){
+      fillHistos(m_sr1b_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+  }
+  if(pass_sr0b5j){
+      fillHistos(m_sr0b5j_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+  }
+  if(pass_sr0b3j){
+      fillHistos(m_sr0b3j_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
   }
 
-  h_bjetN->Fill( N_bjet , eventWeight);
-  h_electronN->Fill( v_electron.size() , eventWeight);
-
-  for( int i_electron = 0 ; i_electron < (int)v_electron.size() ; i_electron++ ) {
-
-      h_electronPt->Fill( ( v_electron.at(i_electron)->pt()) * mev2gev, eventWeight);
-      h_electronE->Fill( ( v_electron.at(i_electron)->e()) * mev2gev, eventWeight);
-      h_electronEta->Fill( v_electron.at(i_electron)->eta() , eventWeight);
-      h_electronPhi->Fill( v_electron.at(i_electron)->phi() , eventWeight);
-      h_electronQ->Fill( v_electron.at(i_electron)->charge()/2 , eventWeight);
-
-    meff += ( v_electron.at(i_electron)->pt() ) * mev2gev ;
-  }
-
-  h_muonN->Fill( v_muon.size() , eventWeight);
-
-  for( int i_muon = 0 ; i_muon < (int)v_muon.size() ; i_muon++ ) {
-
-      h_muonPt->Fill( ( v_muon.at(i_muon)->pt()) * mev2gev, eventWeight);
-      h_muonE->Fill( ( v_muon.at(i_muon)->e()) * mev2gev, eventWeight);
-      h_muonEta->Fill( v_muon.at(i_muon)->eta() , eventWeight);
-      h_muonPhi->Fill( v_muon.at(i_muon)->phi() , eventWeight);
-      h_muonQ->Fill( v_muon.at(i_muon)->charge()/2 , eventWeight);
-
-    meff += ( v_muon.at(i_muon)->pt() ) * mev2gev ;
-  }
-
-  h_meff->Fill( meff , eventWeight);
 
   return EL::StatusCode::SUCCESS;
 }
@@ -468,117 +488,184 @@ EL::StatusCode TruthReader :: histFinalize ()
   // that it gets called on all worker nodes regardless of whether
   // they processed input events.
 
+    SelectionHistograms &h = m_inclusive_histos;
   // Jet
-  h_jetN->GetYaxis()->SetTitle(" # of events ");
-  h_jetN->GetXaxis()->SetTitle(" Number of Jets ");
-  h_jetN->SetLineColor( kBlue + 2);
+  h.jetN->GetYaxis()->SetTitle(" # of events ");
+  h.jetN->GetXaxis()->SetTitle(" Number of Jets ");
+  h.jetN->SetLineColor( kBlue + 2);
 
-  h_jetPt->GetYaxis()->SetTitle(" # of events ");
-  h_jetPt->GetXaxis()->SetTitle(" Pt_{jet} [GeV] ");
-  h_jetPt->SetLineColor( kBlue + 2);
+  h.jetPt->GetYaxis()->SetTitle(" # of events ");
+  h.jetPt->GetXaxis()->SetTitle(" Pt_{jet} [GeV] ");
+  h.jetPt->SetLineColor( kBlue + 2);
 
-  h_jetE->GetYaxis()->SetTitle(" # of events ");
-  h_jetE->GetXaxis()->SetTitle(" E_{jet} [GeV] ");
-  h_jetE->SetLineColor( kBlue + 2);
+  h.jetE->GetYaxis()->SetTitle(" # of events ");
+  h.jetE->GetXaxis()->SetTitle(" E_{jet} [GeV] ");
+  h.jetE->SetLineColor( kBlue + 2);
 
-  h_jetEta->GetYaxis()->SetTitle(" # of events ");
-  h_jetEta->GetXaxis()->SetTitle(" #eta_{jet} ");
-  h_jetEta->SetLineColor( kBlue + 2);
+  h.jetEta->GetYaxis()->SetTitle(" # of events ");
+  h.jetEta->GetXaxis()->SetTitle(" #eta_{jet} ");
+  h.jetEta->SetLineColor( kBlue + 2);
 
-  h_jetPhi->GetYaxis()->SetTitle(" # of events ");
-  h_jetPhi->GetXaxis()->SetTitle(" #phi_{jet} ");
-  h_jetPhi->SetMinimum(0.1);
-  h_jetPhi->SetLineColor( kBlue + 2);
+  h.jetPhi->GetYaxis()->SetTitle(" # of events ");
+  h.jetPhi->GetXaxis()->SetTitle(" #phi_{jet} ");
+  h.jetPhi->SetMinimum(0.1);
+  h.jetPhi->SetLineColor( kBlue + 2);
 
   // BJet
-  h_bjetN->GetYaxis()->SetTitle(" # of events ");
-  h_bjetN->GetXaxis()->SetTitle(" Number of b-jets");
-  h_bjetN->SetLineColor( kBlue + 2);
+  h.bjetN->GetYaxis()->SetTitle(" # of events ");
+  h.bjetN->GetXaxis()->SetTitle(" Number of b-jets");
+  h.bjetN->SetLineColor( kBlue + 2);
 
-  h_bjetPt->GetYaxis()->SetTitle(" # of events ");
-  h_bjetPt->GetXaxis()->SetTitle(" Pt_{b-jet} [GeV] ");
-  h_bjetPt->SetLineColor( kBlue + 2);
+  h.bjetPt->GetYaxis()->SetTitle(" # of events ");
+  h.bjetPt->GetXaxis()->SetTitle(" Pt_{b-jet} [GeV] ");
+  h.bjetPt->SetLineColor( kBlue + 2);
 
-  h_bjetE->GetYaxis()->SetTitle(" # of events ");
-  h_bjetE->GetXaxis()->SetTitle(" E_{b-jet} [GeV] ");
-  h_bjetE->SetLineColor( kBlue + 2);
+  h.bjetE->GetYaxis()->SetTitle(" # of events ");
+  h.bjetE->GetXaxis()->SetTitle(" E_{b-jet} [GeV] ");
+  h.bjetE->SetLineColor( kBlue + 2);
 
-  h_bjetEta->GetYaxis()->SetTitle(" # of events ");
-  h_bjetEta->GetXaxis()->SetTitle(" #eta_{b-jet} ");
-  h_bjetEta->SetLineColor( kBlue + 2);
+  h.bjetEta->GetYaxis()->SetTitle(" # of events ");
+  h.bjetEta->GetXaxis()->SetTitle(" #eta_{b-jet} ");
+  h.bjetEta->SetLineColor( kBlue + 2);
 
-  h_bjetPhi->GetYaxis()->SetTitle(" # of events ");
-  h_bjetPhi->GetXaxis()->SetTitle(" #phi_{b-jet} ");
-  h_bjetPhi->SetMinimum(0.1);
-  h_bjetPhi->SetLineColor( kBlue + 2);
+  h.bjetPhi->GetYaxis()->SetTitle(" # of events ");
+  h.bjetPhi->GetXaxis()->SetTitle(" #phi_{b-jet} ");
+  h.bjetPhi->SetMinimum(0.1);
+  h.bjetPhi->SetLineColor( kBlue + 2);
 
   // Electron
-  h_electronN->GetYaxis()->SetTitle(" # of events ");
-  h_electronN->GetXaxis()->SetTitle(" Number of Electrons");
-  h_electronN->SetLineColor( kBlue + 2);
+  h.electronN->GetYaxis()->SetTitle(" # of events ");
+  h.electronN->GetXaxis()->SetTitle(" Number of Electrons");
+  h.electronN->SetLineColor( kBlue + 2);
 
-  h_electronPt->GetYaxis()->SetTitle(" # of events ");
-  h_electronPt->GetXaxis()->SetTitle(" Pt_{electron} [GeV] ");
-  h_electronPt->SetLineColor( kBlue + 2);
+  h.electronPt->GetYaxis()->SetTitle(" # of events ");
+  h.electronPt->GetXaxis()->SetTitle(" Pt_{electron} [GeV] ");
+  h.electronPt->SetLineColor( kBlue + 2);
 
-  h_electronE->GetYaxis()->SetTitle(" # of events ");
-  h_electronE->GetXaxis()->SetTitle(" E_{electron} [GeV] ");
-  h_electronE->SetLineColor( kBlue + 2);
+  h.electronE->GetYaxis()->SetTitle(" # of events ");
+  h.electronE->GetXaxis()->SetTitle(" E_{electron} [GeV] ");
+  h.electronE->SetLineColor( kBlue + 2);
 
-  h_electronEta->GetYaxis()->SetTitle(" # of events ");
-  h_electronEta->GetXaxis()->SetTitle(" #eta_{electron} ");
-  h_electronEta->SetLineColor( kBlue + 2);
+  h.electronEta->GetYaxis()->SetTitle(" # of events ");
+  h.electronEta->GetXaxis()->SetTitle(" #eta_{electron} ");
+  h.electronEta->SetLineColor( kBlue + 2);
 
-  h_electronPhi->GetYaxis()->SetTitle(" # of events ");
-  h_electronPhi->GetXaxis()->SetTitle(" #phi_{electron} ");
-  h_electronPhi->SetMinimum(0.1);
-  h_electronPhi->SetLineColor( kBlue + 2);
+  h.electronPhi->GetYaxis()->SetTitle(" # of events ");
+  h.electronPhi->GetXaxis()->SetTitle(" #phi_{electron} ");
+  h.electronPhi->SetMinimum(0.1);
+  h.electronPhi->SetLineColor( kBlue + 2);
 
-  h_electronQ->GetYaxis()->SetTitle(" # of events ");
-  h_electronQ->GetXaxis()->SetTitle(" Charge_{electron} ");
-  h_electronQ->SetMinimum(0.1);
-  h_electronQ->SetLineColor( kBlue + 2);
+  h.electronQ->GetYaxis()->SetTitle(" # of events ");
+  h.electronQ->GetXaxis()->SetTitle(" Charge_{electron} ");
+  h.electronQ->SetMinimum(0.1);
+  h.electronQ->SetLineColor( kBlue + 2);
 
   // Muon
-  h_muonN->GetYaxis()->SetTitle(" # of events ");
-  h_muonN->GetXaxis()->SetTitle(" Number of Muons");
-  h_muonN->SetLineColor( kBlue + 2);
+  h.muonN->GetYaxis()->SetTitle(" # of events ");
+  h.muonN->GetXaxis()->SetTitle(" Number of Muons");
+  h.muonN->SetLineColor( kBlue + 2);
 
-  h_muonPt->GetYaxis()->SetTitle(" # of events ");
-  h_muonPt->GetXaxis()->SetTitle(" Pt_{muon} [GeV] ");
-  h_muonPt->SetLineColor( kBlue + 2);
+  h.muonPt->GetYaxis()->SetTitle(" # of events ");
+  h.muonPt->GetXaxis()->SetTitle(" Pt_{muon} [GeV] ");
+  h.muonPt->SetLineColor( kBlue + 2);
 
-  h_muonE->GetYaxis()->SetTitle(" # of events ");
-  h_muonE->GetXaxis()->SetTitle(" E_{muon} [GeV] ");
-  h_muonE->SetLineColor( kBlue + 2);
+  h.muonE->GetYaxis()->SetTitle(" # of events ");
+  h.muonE->GetXaxis()->SetTitle(" E_{muon} [GeV] ");
+  h.muonE->SetLineColor( kBlue + 2);
 
-  h_muonEta->GetYaxis()->SetTitle(" # of events ");
-  h_muonEta->GetXaxis()->SetTitle(" #eta_{muon} ");
-  h_muonEta->SetLineColor( kBlue + 2);
+  h.muonEta->GetYaxis()->SetTitle(" # of events ");
+  h.muonEta->GetXaxis()->SetTitle(" #eta_{muon} ");
+  h.muonEta->SetLineColor( kBlue + 2);
 
-  h_muonPhi->GetYaxis()->SetTitle(" # of events ");
-  h_muonPhi->GetXaxis()->SetTitle(" #phi_{muon} ");
-  h_muonPhi->SetMinimum(0.1);
-  h_muonPhi->SetLineColor( kBlue + 2);
+  h.muonPhi->GetYaxis()->SetTitle(" # of events ");
+  h.muonPhi->GetXaxis()->SetTitle(" #phi_{muon} ");
+  h.muonPhi->SetMinimum(0.1);
+  h.muonPhi->SetLineColor( kBlue + 2);
 
-  h_muonQ->GetYaxis()->SetTitle(" # of events ");
-  h_muonQ->GetXaxis()->SetTitle(" Charge_{muon} ");
-  h_muonQ->SetMinimum(0.1);
-  h_muonQ->SetLineColor( kBlue + 2);
+  h.muonQ->GetYaxis()->SetTitle(" # of events ");
+  h.muonQ->GetXaxis()->SetTitle(" Charge_{muon} ");
+  h.muonQ->SetMinimum(0.1);
+  h.muonQ->SetLineColor( kBlue + 2);
 
   //Global Variable
-  h_met->GetYaxis()->SetTitle(" # of events ");
-  h_met->GetXaxis()->SetTitle(" MET [GeV] ");
-  h_met->SetLineColor( kBlue + 2);
+  h.met->GetYaxis()->SetTitle(" # of events ");
+  h.met->GetXaxis()->SetTitle(" MET [GeV] ");
+  h.met->SetLineColor( kBlue + 2);
 
-  h_metPhi->GetYaxis()->SetTitle(" # of events ");
-  h_metPhi->GetXaxis()->SetTitle(" PHI_{MET} ");
-  h_metPhi->SetMinimum(0.1);
-  h_metPhi->SetLineColor( kBlue + 2);
+  h.metPhi->GetYaxis()->SetTitle(" # of events ");
+  h.metPhi->GetXaxis()->SetTitle(" PHI_{MET} ");
+  h.metPhi->SetMinimum(0.1);
+  h.metPhi->SetLineColor( kBlue + 2);
 
-  h_meff->GetYaxis()->SetTitle(" # of events ");
-  h_meff->GetXaxis()->SetTitle(" M_{eff} [GeV] ");
-  h_meff->SetLineColor( kBlue + 2);
+  h.meff->GetYaxis()->SetTitle(" # of events ");
+  h.meff->GetXaxis()->SetTitle(" M_{eff} [GeV] ");
+  h.meff->SetLineColor( kBlue + 2);
+
+  h.numEvents->GetYaxis()->SetTitle(" # of events ");
+  h.numEvents->GetXaxis()->SetTitle(" weight==1 ");
+  h.numEvents->SetLineColor( kBlue + 2);
 
   return EL::StatusCode::SUCCESS;
 }
+
+void TruthReader::SelectionHistograms::clone_with_suffix(TruthReader::SelectionHistograms &input,
+                                                         EL::Worker *worker,
+                                                         TString name_suffix, TString title_suffix)
+{
+    struct Clone_histogram_with_suffix {
+        TString ns, ts;
+        Clone_histogram_with_suffix(TString name_suffix, TString title_suffix):
+            ns(name_suffix),
+            ts(title_suffix) {}
+        TH1* operator()(const TH1* h_in) {
+            TString h_name = h_in->GetName();
+            TH1* h_out = static_cast<TH1*>(h_in->Clone(h_name+ns));
+            h_out->SetTitle(h_in->GetTitle()+ts);
+            return h_out;
+            }
+    } with_suffix(name_suffix, title_suffix);
+    jetN           = with_suffix(input.jetN       );
+    jetPt          = with_suffix(input.jetPt      );
+    jetE           = with_suffix(input.jetE       );
+    jetEta         = with_suffix(input.jetEta     );
+    jetPhi         = with_suffix(input.jetPhi     );
+    bjetN          = with_suffix(input.bjetN      );
+    bjetPt         = with_suffix(input.bjetPt     );
+    bjetE          = with_suffix(input.bjetE      );
+    bjetEta        = with_suffix(input.bjetEta    );
+    bjetPhi        = with_suffix(input.bjetPhi    );
+    electronN      = with_suffix(input.electronN  );
+    electronPt     = with_suffix(input.electronPt );
+    electronE      = with_suffix(input.electronE  );
+    electronEta    = with_suffix(input.electronEta);
+    electronPhi    = with_suffix(input.electronPhi);
+    electronQ      = with_suffix(input.electronQ  );
+    muonN          = with_suffix(input.muonN      );
+    muonPt         = with_suffix(input.muonPt     );
+    muonE          = with_suffix(input.muonE      );
+    muonEta        = with_suffix(input.muonEta    );
+    muonPhi        = with_suffix(input.muonPhi    );
+    muonQ          = with_suffix(input.muonQ      );
+    meff           = with_suffix(input.meff       );
+    met            = with_suffix(input.met        );
+    metPhi         = with_suffix(input.metPhi     );
+    numEvents      = with_suffix(input.numEvents  );
+
+    add_histograms_to_output(worker);
+}
+
+
+void TruthReader::generateSrHistograms()
+{
+
+    m_sr3b_histos.clone_with_suffix  (m_inclusive_histos, wk(), "_sr3b",   " (sr3b)");
+    m_sr1b_histos.clone_with_suffix  (m_inclusive_histos, wk(), "_sr1b",   " (sr1b)");
+    m_sr0b5j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b5j", " (sr0b5j)");
+    m_sr0b3j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b3j", " (sr0b3j)");
+}
+void TruthReader::SelectionHistograms::add_histograms_to_output(EL::Worker *worker)
+{
+    for(auto h : histograms())
+        worker->addOutput(h);
+}
+
