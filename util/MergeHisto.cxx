@@ -26,6 +26,7 @@ int main( int argc, char* argv[] ) {
   }
 
   SetAtlasStyle();
+  bool normalize = true;
 
   TString file1  = argv[1];
   TString label1 = argv[2];
@@ -44,13 +45,20 @@ int main( int argc, char* argv[] ) {
   size_t histo_counter = 0;
   for(auto &h_name : h_names){
 
-    TH1F  *h1 = static_cast<TH1F*(f1->Get( h_name ));
+    TH1F  *h1 = static_cast<TH1F*>(f1->Get( h_name ));
     h1->SetLineColor(kBlue+2);
     h1->GetXaxis()->SetLabelOffset(0.05);
 
     TH1F  *h2 = static_cast<TH1F*>(f2->Get( h_name ));
     h2->SetMarkerStyle(1);
     h2->SetLineColor(kRed+2);
+
+    double integral_h1 = h1->Integral();
+    double integral_h2 = h2->Integral();
+    if(normalize && integral_h1 && integral_h2) {
+        h1->Scale(1.0/integral_h1);
+        h2->Scale(1.0/integral_h2);
+    }
 
     TLegend *legend=new TLegend(0.90,0.90,0.80,0.80);
     legend->SetTextFont(62);
@@ -83,8 +91,8 @@ int main( int argc, char* argv[] ) {
     href->SetLineWidth(1);
     href->SetLineStyle(2);
 
-    href->SetMaximum(1.75);
-    href->SetMinimum(0.25);
+    href->SetMaximum(1.25);
+    href->SetMinimum(0.75);
 
     href->GetYaxis()->SetTitle(label1+" / "+label2);
 
