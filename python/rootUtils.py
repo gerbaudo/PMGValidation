@@ -413,3 +413,8 @@ def buildErrBandGraph(histo_tot_bkg, err2s) :
     gr.SetFillColor(r.kGray+3)
     gr.SetLineWidth(2)
     return gr
+
+def normalizeTo(histogram=None, normalization=1.0):
+    integral = histogram.Integral()
+    if integral:
+        histogram.Scale(normalization/integral)
