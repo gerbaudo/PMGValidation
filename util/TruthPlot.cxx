@@ -19,12 +19,13 @@ using namespace std;
 
 void help() {
     cout<<"Usage:"
-        <<"TruthPlot [options]"
+        <<"TruthPlot [options]"<<endl
         <<"-o --output"      <<"\t"<<" output directory"<<endl
         <<"-f --filelist"    <<"\t"<<" input filelist"<<endl
         <<"-i --input-dir"   <<"\t"<<" input directory"<<endl
         <<"  to be scanned if you do not provide a filelist"<<endl
         <<"-p --file-pattern"<<"\t"<<" pattern used to scan directory"<<endl
+        <<"-s --sample-name" <<"\t"<<" sample name (used for output)"<<endl
         <<"-n --num-events"  <<"\t"<<" number of events to process"<<endl
         <<"-v --verbose"     <<"\t"<<" print more"<<endl
         <<"-w --weight-index"<<"\t"<<" weight index from 'TruthEvents'"<<endl
@@ -47,7 +48,7 @@ int main( int argc, char* argv[] ) {
 
     for(int i = 1; i < argc; i++) {
         string opt = argv[i];
-        if(opt=="-s"||opt=="--sample-name") sampleName = argv[++i];
+        if     (opt=="-s"||opt=="--sample-name") sampleName = argv[++i];
         else if(opt=="-o"||opt=="--output") outputDir = argv[++i];
         else if(opt=="-f"||opt=="--filelist") inputFilelist = argv[++i];
         else if(opt=="-i"||opt=="--input-dir") inputDirectory = argv[++i];
@@ -57,6 +58,7 @@ int main( int argc, char* argv[] ) {
         else if(opt=="-w"||opt=="--weight-index") weightIndex = atoi(argv[++i]);
         else if(opt=="--lxbatch") lxbatch=true;
         else {
+            cout<<"unknwown option '"<<opt<<"'"<<endl;
             help();
             return 1;
         }

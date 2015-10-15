@@ -199,8 +199,6 @@ EL::StatusCode TruthReader :: execute ()
   // histograms and trees.  This is where most of your actual analysis
   // code will go.
 
-    SelectionHistograms &h = m_inclusive_histos;
-
   xAOD::TEvent* event = wk()->xaodEvent();
   double eventWeight = 1.0;
 
@@ -209,7 +207,7 @@ EL::StatusCode TruthReader :: execute ()
   //---------------------------
   const xAOD::EventInfo* eventInfo = 0;
   EL_RETURN_CHECK("execute",event->retrieve( eventInfo, "EventInfo"));
-  //  std::cout << eventInfo->eventNumber() << std::endl;
+  // std::cout<<"run "<<eventInfo->runNumber()<<" event "<< eventInfo->eventNumber() << std::endl;
   eventWeight *= eventInfo->mcEventWeight();
 
   const xAOD::TruthEventContainer* truthEvents = 0;
