@@ -9,6 +9,8 @@
 
 #include <EventLoop/Algorithm.h>
 
+#include "PMGValidation/ProgressPrinter.h"
+
 class TruthReader : public EL::Algorithm
 {
   // put your configuration variables here as public variables.
@@ -70,6 +72,7 @@ private:
   SelectionHistograms m_sr1b_histos; //!
   SelectionHistograms m_sr0b5j_histos; //!
   SelectionHistograms m_sr0b3j_histos; //!
+  ProgressPrinter m_printer; //!
 
 public:
   bool verbose;

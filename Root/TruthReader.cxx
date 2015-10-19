@@ -200,6 +200,7 @@ EL::StatusCode TruthReader :: execute ()
   // histograms and trees.  This is where most of your actual analysis
   // code will go.
 
+  m_printer.countAndPrint(cout);
   xAOD::TEvent* event = wk()->xaodEvent();
   double eventWeight = 1.0;
 
@@ -216,6 +217,7 @@ EL::StatusCode TruthReader :: execute ()
   if(false && truthEvents){
       xAOD::TruthEventContainer::const_iterator te_itr = truthEvents->begin();
       xAOD::TruthEventContainer::const_iterator te_end = truthEvents->end();
+      cout<<"EventInfo::mcEventWeight "<<eventWeight<<endl;
       cout<<"TruthEvents : ";
       for(; te_itr!=te_end; ++te_itr) {
           cout<<"TruthEvent::weights["<<(*te_itr)->weights().size()<<"] : ";
