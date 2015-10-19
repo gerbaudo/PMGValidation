@@ -13,34 +13,51 @@ import utils
 import rootUtils as ru
 R = ru.importRoot()
 style = ru.getAtlasStyle()
+style.SetOptTitle(1)
 
 def main():
     ""
     set_log()
     outdir = './'
+    file_label = 'ttW_scale_sys'
     plot_label = 'ttW scale sys'
-    normalize_to_unity = False # True
+    normalize_to_unity = True # False
     luminosity = 1.0
 
     combiner = HistogramCombiner()
     combiner.build_samples(group='ttW_sysWgt', selected_samples=['ttWnp0_sysWgt', 'ttWnp1_sysWgt', 'ttWnp2_sysWgt'])
-    # combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp', 'ttWnp1_scalUp', 'ttWnp2_scalUp'])
-    # combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn', 'ttWnp1_scalDn', 'ttWnp2_scalDn'])
     combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp', 'ttWnp1_scalUp', 'ttWnp2_scalUp'])
     combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn', 'ttWnp1_scalDn', 'ttWnp2_scalDn'])
+    # combiner.build_samples(group='ttW_sysWgt', selected_samples=['ttWnp0_sysWgt'                                  ])
+    # combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp'                                  ])
+    # combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn'                                  ])
+    # combiner.build_samples(group='ttW_sysWgt', selected_samples=[                 'ttWnp1_sysWgt'                 ])
+    # combiner.build_samples(group='ttW_scalUp', selected_samples=[                 'ttWnp1_scalUp'                 ])
+    # combiner.build_samples(group='ttW_scalDn', selected_samples=[                 'ttWnp1_scalDn'                 ])
+    # combiner.build_samples(group='ttW_sysWgt', selected_samples=[                                  'ttWnp2_sysWgt'])
+    # combiner.build_samples(group='ttW_scalUp', selected_samples=[                                  'ttWnp2_scalUp'])
+    # combiner.build_samples(group='ttW_scalDn', selected_samples=[                                  'ttWnp2_scalDn'])
+    # combiner.build_samples(group='ttW_alpsUp', selected_samples=['ttWnp0_alpsUp', 'ttWnp1_alpsUp', 'ttWnp2_alpsUp'])
+    # combiner.build_samples(group='ttW_alpsDn', selected_samples=['ttWnp0_alpsDn', 'ttWnp1_alpsDn', 'ttWnp2_alpsDn'])
     combiner.normalize_to_unity = normalize_to_unity
 
     # histogram_names = get_histogram_names(input_nom) # todo : get histonames from first file
     # exclude_histograms = ['EventLoop_EventCount']
     # histogram_names = [h for h in histogram_names if h not in exclude_histograms]
-    histogram_names = ['h_meff']
+    histogram_names = ['h_meff', 'h_jetN',
+                       'h_meff_sr3b', 'h_jetN_sr3b',
+                       'h_meff_sr1b', 'h_jetN_sr1b',
+                       'h_meff_sr0b5j', 'h_jetN_sr0b5j',
+                       'h_meff_sr0b3j', 'h_jetN_sr0b3j',
+                       ]
 
     for histogram_name in histogram_names:
-        print histogram_name
         histograms = combiner.get_histograms(histogram_name=histogram_name)
         h_nom = histograms['ttW_sysWgt']
         h_up  = histograms['ttW_scalUp']
         h_dn  = histograms['ttW_scalDn']
+        # h_up  = histograms['ttW_alpsUp']
+        # h_dn  = histograms['ttW_alpsDn']
         histos = [h_nom, h_up, h_dn]
         h_nom.SetLineWidth(2*h_nom.GetLineWidth())
         h_up.SetLineColor(R.kBlue)
@@ -58,6 +75,8 @@ def main():
         topPad.cd()
         topPad._po = [pad_master] # persistent objects
         pad_master.Draw('axis')
+        ru.topRightLabel(topPad, pad_master.GetTitle(), xpos=0.5)
+
         leg = ru.topRightLegend(can, 0.225, 0.325)
         leg.SetBorderSize(0)
         leg.SetHeader(plot_label+"(lumi %.1f)"%luminosity)
@@ -101,7 +120,11 @@ def main():
         botPad._graphical_objects = [ratio_up, ratio_dn, ratioPadMaster] + refLines # avoid garbage collection
         botPad.Update()
         can.Update()
+        first_histo = histogram_name is histogram_names[0]
+        last_histo  = histogram_name is histogram_names[-1]
         can.SaveAs(outdir+'/'+can.GetName()+'.png')
+        can.SaveAs(outdir+'/'+file_label+'.pdf' + ('(' if first_histo else ')' if last_histo else ''))
+
 
 def get_number_of_events(input_filename='', histogram_name='h_numEvents'):
     "read from file the number of events that have been processed"
