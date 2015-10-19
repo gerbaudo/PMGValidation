@@ -108,6 +108,7 @@ EL::StatusCode TruthReader :: histInitialize ()
   h.metPhi = new TH1F("h_metPhi", "h_metPhi", 20, 0, 3.14);
   h.numEvents = new TH1F("h_numEvents", "h_numEvents", 1, 0.5, 1.5);
 
+  h.sumw2();
   h.add_histograms_to_output(wk());
 
   generateSrHistograms();

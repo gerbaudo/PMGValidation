@@ -55,6 +55,10 @@ private:
       for(auto &h : histograms())
         h = nullptr;
     }
+    void sumw2() {
+      for(auto &h : histograms())
+        h->Sumw2();
+    }
     SelectionHistograms() { set_to_nullptr(); }
     void clone_with_suffix(SelectionHistograms &input, EL::Worker *worker, TString name_suffix, TString title_suffix);
     void add_histograms_to_output(EL::Worker *worker);
