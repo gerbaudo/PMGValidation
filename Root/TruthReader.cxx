@@ -360,14 +360,18 @@ EL::StatusCode TruthReader :: execute ()
           v_bjet.push_back(jet);
   }
 
+  std::vector<xAOD::Jet*> v_jet50;
+  for(const auto j : v_jet) { if(j->pt()*mev2gev >50.0) v_jet50.push_back(j); }
+  std::vector<xAOD::Jet*> v_bjet20;
+  for(const auto j : v_bjet) { if(j->pt()*mev2gev >20.0) v_bjet20.push_back(j); }
+
   double etmiss = (*met_it)->met() * mev2gev;
   double etmissPhi = (*met_it)->phi();
-  double meff = etmiss + sumPt(v_jet) + sumPt(v_electron) + sumPt(v_muon);
+  double meff    = etmiss + sumPt(v_jet  ) + sumPt(v_electron) + sumPt(v_muon);
+  double meff_ss = etmiss + sumPt(v_jet50) + sumPt(v_electron) + sumPt(v_muon);
   size_t num_ss_leptons = count_samesign_leptons(v_electron, v_muon);
-  size_t num_jet20_b = std::count_if(v_bjet.begin(), v_bjet.end(),
-                                     [](const xAOD::Jet* j) {return j->pt()*mev2gev >20.0;});
-  size_t num_jet50 = std::count_if(v_jet.begin(), v_jet.end(),
-                                   [](const xAOD::Jet* j) {return j->pt()*mev2gev >50.0;});
+  size_t num_jet20_b = v_bjet20.size();
+  size_t num_jet50 = v_jet50.size();
 
   //----------------------------
   // Fill Histograms
@@ -428,19 +432,24 @@ EL::StatusCode TruthReader :: execute ()
   } fillHistos;
 
   if(true){
-      fillHistos(m_inclusive_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+      fillHistos(m_inclusive_histos,
+                 v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
   }
   if(pass_sr3b){
-      fillHistos(m_sr3b_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+      fillHistos(m_sr3b_histos,
+                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr1b){
-      fillHistos(m_sr1b_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+      fillHistos(m_sr1b_histos,
+                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr0b5j){
-      fillHistos(m_sr0b5j_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+      fillHistos(m_sr0b5j_histos,
+                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr0b3j){
-      fillHistos(m_sr0b3j_histos, v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+      fillHistos(m_sr0b3j_histos,
+                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
   }
 
 
