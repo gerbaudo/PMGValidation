@@ -19,9 +19,11 @@ def main():
     ""
     set_log()
     outdir = './'
+    # file_label = 'ttWnp0_scale_sys'
+    # plot_label = 'ttWnp0 scale sys'
     file_label = 'ttW_scale_sys'
     plot_label = 'ttW scale sys'
-    normalize_to_unity = True # False
+    normalize_to_unity = False # True
     luminosity = 1.0
 
     combiner = HistogramCombiner()
@@ -79,7 +81,7 @@ def main():
 
         leg = ru.topRightLegend(can, 0.225, 0.325)
         leg.SetBorderSize(0)
-        leg.SetHeader(plot_label+"(lumi %.1f)"%luminosity)
+        leg.SetHeader(plot_label+ ("(norm=1)" if normalize_to_unity else "(lumi %.1f)"%luminosity))
         topPad._po.append(leg)
         def format_legend_label(h, l):
             return "{0}: {1:.2E} ({2:.0f})".format(l, h.Integral(), h.GetEntries())
@@ -126,14 +128,15 @@ def main():
         can.SaveAs(outdir+'/'+file_label+'.pdf' + ('(' if first_histo else ')' if last_histo else ''))
 
 
-def get_number_of_events(input_filename='', histogram_name='h_numEvents'):
+def get_number_of_processed_events(input_filename='', histogram_name='h_numEvents'):
     "read from file the number of events that have been processed"
     input_file = R.TFile.Open(input_filename)
     histo = input_file.Get(histogram_name)
-    number_of_events = histo.GetEntries()
+    number_of_processed_events = histo.GetEntries()
+    integral = histo.Integral()
     input_file.Close()
-    log.info("number_of_events: %d from %s"%(number_of_events, input_filename))
-    return number_of_events
+    log.info("%s: %d events (integral %.1f. entries %.1f)"%(input_filename, number_of_processed_events, integral, number_of_processed_events))
+    return number_of_processed_events
 
 def get_histogram_names(input_filename=''):
     "get a list of histograms from a file"
@@ -261,14 +264,21 @@ class HistogramCombiner:
             if not input_files or len(input_files)==1:
                 log.warning("no files matching '%s' : %s"%(input_files_wildcard, str(input_files)))
             self.input_file = merge_if_needed(input_files)
-            self.number_of_events = get_number_of_events(self.input_file)
+            self.number_of_processed_events = get_number_of_processed_events(self.input_file)
             self.input_file = R.TFile.Open(self.input_file)
             log.info("using input %s"%self.input_file.GetName())
 
         def get_histogram(self, name=''):
             h = self.input_file.Get(name)
-            normalization = self.xsec/self.number_of_events
-            h.Scale(normalization)
+            entries  = h.GetEntries()
+            current_integral = h.Integral()
+            target_integral = self.xsec * (entries/self.number_of_processed_events)
+            scale = target_integral/current_integral if current_integral else 1.0
+            h.Scale(scale)
+            log.info("%s : scaling by %f  integral: current %1.E, target %.1E, ( %.1E * %.1E / %.1E)"%
+                     (self.name,
+                      scale, current_integral, target_integral,
+                      self.xsec , entries, self.number_of_processed_events))
             return h
 
     def __init__(self):
