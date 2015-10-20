@@ -169,70 +169,71 @@ def merge(input_files=[], output_filename=''):
 
 def get_input_samples():
     "xsecs from Josh"
+    base='out/batch_10k/'
     return {
         # ttW nominal
         'ttWnp0_sysWgt' : {
-            'input_files' : 'out/batch/510066/hist-ttW_sysWgt-0*.root',
+            'input_files' : base+'510066/hist-ttW_sysWgt-0*.root',
             'xsec' : 0.17556
             },
         'ttWnp1_sysWgt' : {
-            'input_files' : 'out/batch/510067/hist-ttW_sysWgt-0*.root',
+            'input_files' : base+'510067/hist-ttW_sysWgt-0*.root',
             'xsec' : 0.14134
             },
         'ttWnp2_sysWgt' : {
-            'input_files' : 'out/batch/510068/hist-ttW_sysWgt-0*.root',
+            'input_files' : base+'510068/hist-ttW_sysWgt-0*.root',
             'xsec' : 0.13792
             },
         # ttW scalUp
         'ttWnp0_scalUp' : {
-            'input_files' : 'out/batch/610066/hist-ttW_scalUp-0*.root',
+            'input_files' : base+'610066/hist-ttW_scalUp-0*.root',
             'xsec' : 0.17776
             },
         'ttWnp1_scalUp' : {
-            'input_files' : 'out/batch/610067/hist-ttW_scalUp-0*.root',
+            'input_files' : base+'610067/hist-ttW_scalUp-0*.root',
             'xsec' : 0.14182
             },
         'ttWnp2_scalUp' : {
-            'input_files' : 'out/batch/610068/hist-ttW_scalUp-0*.root',
+            'input_files' : base+'610068/hist-ttW_scalUp-0*.root',
             'xsec' : 0.13596
             },
         # ttW scalDn
         'ttWnp0_scalDn' : {
-            'input_files' : 'out/batch/710066/hist-ttW_scalDn-0*.root',
+            'input_files' : base+'710066/hist-ttW_scalDn-0*.root',
             'xsec' : 0.17894
             },
         'ttWnp1_scalDn' : {
-            'input_files' : 'out/batch/710067/hist-ttW_scalDn-0*.root',
+            'input_files' : base+'710067/hist-ttW_scalDn-0*.root',
             'xsec' : 0.14156
             },
         'ttWnp2_scalDn' : {
-            'input_files' : 'out/batch/710068/hist-ttW_scalDn-0*.root',
+            'input_files' : base+'710068/hist-ttW_scalDn-0*.root',
             'xsec' : 0.13726
             },
         # ttW alpsUp
         'ttWnp0_alpsUp' : {
-            'input_files' : 'out/batch/810066/hist-ttW_alpsUp-0*.root',
+            'input_files' : base+'810066/hist-ttW_alpsUp-0*.root',
             'xsec' : 0.17490
             },
         'ttWnp1_alpsUp' : {
-            'input_files' : 'out/batch/810067/hist-ttW_alpsUp-0*.root',
+            'input_files' : base+'810067/hist-ttW_alpsUp-0*.root',
             'xsec' : 0.14096
             },
         'ttWnp2_alpsUp' : {
-            'input_files' : 'out/batch/810068/hist-ttW_alpsUp-0*.root',
+            'input_files' : base+'810068/hist-ttW_alpsUp-0*.root',
             'xsec' : 0.13686
             },
         # ttW alpsDn
         'ttWnp0_alpsDn' : {
-            'input_files' : 'out/batch/910066/hist-ttW_alpsDn-0*.root',
+            'input_files' : base+'910066/hist-ttW_alpsDn-0*.root',
             'xsec' : 0.17532
             },
         'ttWnp1_alpsDn' : {
-            'input_files' : 'out/batch/910067/hist-ttW_alpsDn-0*.root',
+            'input_files' : base+'910067/hist-ttW_alpsDn-0*.root',
             'xsec' : 0.14216
             },
         'ttWnp2_alpsDn' : {
-            'input_files' : 'out/batch/910068/hist-ttW_alpsDn-0*.root',
+            'input_files' : base+'910068/hist-ttW_alpsDn-0*.root',
             'xsec' : 0.13632
             },
         }
