@@ -271,14 +271,16 @@ class HistogramCombiner:
         def get_histogram(self, name=''):
             h = self.input_file.Get(name)
             entries  = h.GetEntries()
-            current_integral = h.Integral()
-            target_integral = self.xsec * (entries/self.number_of_processed_events)
-            scale = target_integral/current_integral if current_integral else 1.0
+            lumi = 1.0
+            filter_eff = 1.0 # josh says there's no filter applied
+            k_factor = 1.0 # none for now
+            sumw = self.sumw_of_processed_events # use the sumw of generated/processed events, not the accepted ones
+            scale = (lumi * self.xsec * filter_eff * k_factor / sumw) if sumw else 1.0
             h.Scale(scale)
-            log.info("%s : scaling by %f  integral: current %1.E, target %.1E, ( %.1E * %.1E / %.1E)"%
-                     (self.name,
-                      scale, current_integral, target_integral,
-                      self.xsec , entries, self.number_of_processed_events))
+            log.debug("%s : scaling by %.3E"
+                     " (lumi %.1E,  xsec %.3E, filter_eff %.2E, k_factor %.2E, sumw %.2E)"%
+                     (self.name, scale,
+                      lumi,  self.xsec,  filter_eff, k_factor, sumw))
             return h
 
     def __init__(self):
