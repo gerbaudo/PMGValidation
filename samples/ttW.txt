@@ -1,0 +1,15 @@
+user.gerbaudo:user.gerbaudo.truth1.2015-10-07_221533.510066.13TeV_ttW_sysWgt_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-07_221622.510067.13TeV_ttW_sysWgt_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-07_221712.510068.13TeV_ttW_sysWgt_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194520.610066.13TeV_ttW_scalUp_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194556.610067.13TeV_ttW_scalUp_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194632.610068.13TeV_ttW_scalUp_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194708.710066.13TeV_ttW_scalDn_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194744.710067.13TeV_ttW_scalDn_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194820.710068.13TeV_ttW_scalDn_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194857.810066.13TeV_ttW_alpsUp_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_194934.810067.13TeV_ttW_alpsUp_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_195014.810068.13TeV_ttW_alpsUp_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_195053.910066.13TeV_ttW_alpsDn_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_195129.910067.13TeV_ttW_alpsDn_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-10-05_195206.910068.13TeV_ttW_alpsDn_EXT0/
