@@ -39,10 +39,11 @@ def main() :
     add_arg('-p', '--pattern', default='.*', help='grep pattern to select datasets')
     add_arg('-S', '--submit', action='store_true', help='actually submit jobs')
     add_arg('-v', '--verbose', action='store_true')
+    add_arg('-d', '--debug', action='store_true')
     add_arg('--run-site', default='1', help='Set cluster option [1:brick-only, 2:brick+local, 3:brick+local+SDSC, 4:brick+local+SDSC+UCs] (default: 1)')
     args = parser.parse_args()
 
-    set_log(args.verbose)
+    set_log(args.verbose, args.debug)
     input_files = args.input_files
     # nEvents     = float(args.nEvents)
     pattern     = args.pattern
@@ -52,7 +53,7 @@ def main() :
                      "brick+local" if run_site=='2' else
                      "brick-only")
     submit = args.submit
-    log.info("options:\ninput file: {}\npattern: {}\nsite option: {}".format(input_files, pattern, site_option))
+    log.debug("options:\ninput file: {}\npattern: {}\nsite option: {}".format(input_files, pattern, site_option))
     for iInput_file, input_file in enumerate(input_files) :
         iSample = 0
         file_label = without_extension(input_file)
@@ -74,7 +75,7 @@ def main() :
                 # now submit one job per file
                 fax_files = get_FAX_files(sample)
                 for fax_file in fax_files :
-                    log.info("\tfile: %s"%fax_file)
+                    log.debug("\tfile: %s"%fax_file)
                     sub_name = "%s_%03d_%03d"%(sample_label, iInput_file, iSample)
                     condor_name = sub_name+'.condor'
                     input_container = sample
@@ -91,7 +92,7 @@ def main() :
                     # see email 'Questions from condor newbie' on 2015-10-13
                     run_cmd = 'ARGS="'+script_arguments+'" condor_submit '+condor_script+' '+log_cmd+' '+err_cmd+' '+out_cmd
 
-                    log.info(run_cmd)
+                    log.debug(run_cmd)
                     if submit:
                         subprocess.call(run_cmd, shell=True)
                     iSample += 1
@@ -120,8 +121,6 @@ executable = %(condor_exe_name)s
 arguments = $ENV(ARGS)
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_output_files = out/hist-%(samplename)s.root
-transfer_output_remaps = "out/hist-%(samplename)s.root = %(dest_dir)s/hist-%(samplename)s.root"
 use_x509userproxy = True
 notification = Never
 queue
@@ -254,8 +253,10 @@ def dsid_from_samplename(samplename=''):
     match = re.search('\.(?P<dsid>\d{6})\.', samplename)
     return match.group('dsid')
 
-def set_log(verbose):
+def set_log(verbose, debug):
     if verbose:
+        log.basicConfig(format="%(levelname)s: %(message)s", level=log.INFO)
+    elif debug:
         log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
     else:
         log.basicConfig(format="%(levelname)s: %(message)s")
