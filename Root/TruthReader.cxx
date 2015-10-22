@@ -214,7 +214,9 @@ EL::StatusCode TruthReader :: execute ()
 
   const xAOD::TruthEventContainer* truthEvents = 0;
   EL_RETURN_CHECK("execute()", event->retrieve(truthEvents, "TruthEvents"));
-  if(false && truthEvents){
+  const int maxPrintEvents = 10;
+  bool print_event = printedEvents<maxPrintEvents;
+  if(print_event && truthEvents){
       xAOD::TruthEventContainer::const_iterator te_itr = truthEvents->begin();
       xAOD::TruthEventContainer::const_iterator te_end = truthEvents->end();
       cout<<"EventInfo::mcEventWeight "<<eventWeight<<endl;
@@ -225,6 +227,7 @@ EL::StatusCode TruthReader :: execute ()
               cout<<" "<<w;
           cout<<endl;
       }
+      printedEvents++;
   }
   if(truthEvents and weightIndex >= 0){
       if(truthEvents->size()!=1)
@@ -236,10 +239,8 @@ EL::StatusCode TruthReader :: execute ()
       if(weightIndex > weightsSize)
           Error("TruthReader::execute()", XAOD_MESSAGE( "invalid weightIndex %d (max %d)"), weightIndex, weightsSize);
       eventWeight = weights[weightIndex];
-      const int maxPrintEvents = 10;
       if(verbose && printedEvents<maxPrintEvents) {
-          cout<<"eventWeight "<<eventWeight<<endl;
-          printedEvents++;
+          cout<<"eventWeight "<<eventWeight<<" (after TruthEventContainer::weights["<<weightIndex<<"])"<<endl;
       }
   }
 
