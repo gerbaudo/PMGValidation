@@ -421,7 +421,7 @@ EL::StatusCode TruthReader :: execute ()
                       double &meff,
                       double &weight) {
 
-      h.numEvents->Fill(weight);
+      h.numEvents->Fill(1.0, weight);
       FillJetHistos()(jets, h.jetN, h.jetPt, h.jetE, h.jetEta, h.jetPhi, weight);
       FillJetHistos()(bjets, h.bjetN, h.bjetPt, h.bjetE, h.bjetEta, h.bjetPhi, weight);
       FillLeptonHistos()(electrons, h.electronN, h.electronPt, h.electronE, h.electronEta, h.electronPhi, h.electronQ, weight);
