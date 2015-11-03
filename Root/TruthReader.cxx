@@ -14,6 +14,7 @@
 #include "xAODJet/JetAuxContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
 
+#include <algorithm>
 #include <iostream>
 using namespace std;
 
@@ -165,6 +166,39 @@ double sumPt(Container &container)
     return totPt;
 }
 
+struct IsPdg {
+    int pdg;
+    IsPdg(int p):pdg(p){}
+    bool operator()(const xAOD::TruthParticle* l) {return (l && l->absPdgId()==pdg);}
+};
+IsPdg isElectron(11), isMuon(13);
+
+struct PtGreater {
+    bool operator()(const xAOD::TruthParticle* a, const xAOD::TruthParticle* b) {return a->pt()>b->pt();}
+} byPt;
+
+bool has_same_sign_pair(std::vector<xAOD::TruthParticle*> &leptons,
+                        xAOD::TruthParticle* &l0, xAOD::TruthParticle* &l1)
+{
+    l0 = l1 = nullptr; // clear output
+    sort(leptons.begin(), leptons.end(), byPt);
+    std::vector<xAOD::TruthParticle*> lplus, lminus;
+    for(auto l : leptons) {
+        if(l->pt()*mev2gev>20.0) {
+            if(l->charge()>0) lplus.push_back(l);
+            if(l->charge()<0) lminus.push_back(l);
+        }
+    }
+    if(lplus.size()>1 and lminus.size()>1) {
+        bool plus = lplus[0]->pt() > lminus[0]->pt();
+        l0 = plus ? lplus[0] : lminus[0];
+        l1 = plus ? lplus[1] : lminus[1];
+    }
+    else if(lplus.size()>1) { l0 = lplus[0]; l1 = lplus[1]; }
+    else if(lminus.size()>1) { l0 = lminus[0]; l1 = lminus[1]; }
+    return l0 && l1;
+}
+
 size_t count_samesign_leptons(const std::vector<xAOD::TruthParticle*> &electrons, const std::vector<xAOD::TruthParticle*> &muons)
 {
     size_t number_of_leptons=0;
@@ -172,18 +206,12 @@ size_t count_samesign_leptons(const std::vector<xAOD::TruthParticle*> &electrons
     leptons.reserve(electrons.size()+muons.size());
     leptons.insert(leptons.end(), electrons.begin(), electrons.end());
     leptons.insert(leptons.end(), muons.begin(), muons.end());
-    size_t nplus = 0;
-    size_t nminus = 0;
-    for(auto l : leptons) {
-        if(l->pt()*mev2gev>20.0) {
-            if(l->charge()>0) nplus++;
-            if(l->charge()<0) nminus++;
-        }
-    }
-    bool samesign = (nplus>1 || nminus>1);
-    if(samesign) { // count potential third leptons above 10GeV
+    sort(leptons.begin(), leptons.end(), byPt);
+    xAOD::TruthParticle *l0=nullptr, *l1=nullptr;
+    bool samesign = has_same_sign_pair(leptons, l0, l1);
+    if(samesign) {
         number_of_leptons=2;
-        for(auto l : leptons) {
+        for(auto l : leptons) { // count potential third leptons above 10GeV
             double pt = l->pt()*mev2gev;
             if(pt<20.0 && pt>10.0) {
                 number_of_leptons++;
@@ -192,6 +220,27 @@ size_t count_samesign_leptons(const std::vector<xAOD::TruthParticle*> &electrons
     }
     return number_of_leptons;
 }
+
+bool has_Z_candidate(const xAOD::TruthParticle* l0,
+                     const xAOD::TruthParticle* l1,
+                     const xAOD::TruthParticle* l2)
+{
+    struct {
+        bool operator()(const xAOD::TruthParticle* a, const xAOD::TruthParticle* b) {
+            bool opp_sign = (a->charge()*b->charge()<0);
+            bool opp_flav = (isMuon(a) != isMuon(b));
+            double m = (a->p4()+b->p4()).M()*mev2gev;
+            return (opp_sign and opp_flav and (80<m) and (m<100));
+        }
+    } is_Z_candidate;
+    return (is_Z_candidate(l0, l1) or
+            is_Z_candidate(l1, l2) or
+            is_Z_candidate(l0, l2) );
+}
+bool is_ee(const xAOD::TruthParticle* l0, const xAOD::TruthParticle* l1) { return isElectron(l0) and isElectron(l1); }
+bool is_em(const xAOD::TruthParticle* l0, const xAOD::TruthParticle* l1) { return ((isElectron(l0) and isMuon(l1)) or
+                                                                                   (isMuon(l0) and isElectron(l1))); }
+bool is_mm(const xAOD::TruthParticle* l0, const xAOD::TruthParticle* l1) { return isMuon(l0) and isMuon(l1); }
 
 EL::StatusCode TruthReader :: execute ()
 {
@@ -363,16 +412,103 @@ EL::StatusCode TruthReader :: execute ()
 
   std::vector<xAOD::Jet*> v_jet50;
   for(const auto j : v_jet) { if(j->pt()*mev2gev >50.0) v_jet50.push_back(j); }
+  std::vector<xAOD::Jet*> v_jet25;
+  for(const auto j : v_jet) { if(j->pt()*mev2gev >25.0) v_jet25.push_back(j); }
   std::vector<xAOD::Jet*> v_bjet20;
   for(const auto j : v_bjet) { if(j->pt()*mev2gev >20.0) v_bjet20.push_back(j); }
 
   double etmiss = (*met_it)->met() * mev2gev;
   double etmissPhi = (*met_it)->phi();
-  double meff    = etmiss + sumPt(v_jet  ) + sumPt(v_electron) + sumPt(v_muon);
+  double meff    = etmiss + sumPt(v_jet  ) + sumPt(v_electron) + sumPt(v_muon); // different jet pt
   double meff_ss = etmiss + sumPt(v_jet50) + sumPt(v_electron) + sumPt(v_muon);
+  double meff_cr = etmiss + sumPt(v_jet25) + sumPt(v_electron) + sumPt(v_muon);
   size_t num_ss_leptons = count_samesign_leptons(v_electron, v_muon);
   size_t num_jet20_b = v_bjet20.size();
+  size_t num_jet25 = v_jet25.size();
   size_t num_jet50 = v_jet50.size();
+  bool el_eta137 = all_of(v_electron.begin(), v_electron.end(),
+                        [](const xAOD::TruthParticle* p) { return fabs(p->eta())<1.37; });
+
+  vector<xAOD::TruthParticle*> signalLeptons; // pt>10 and eta criteria already applied on v_muon, v_electron
+  signalLeptons.insert(signalLeptons.end(), v_electron.begin(), v_electron.end());
+  signalLeptons.insert(signalLeptons.end(), v_muon.begin(), v_muon.end());
+  sort(signalLeptons.begin(), signalLeptons.end(), byPt);
+
+  xAOD::TruthParticle* l0 = signalLeptons.size()>0 ? signalLeptons[0] : nullptr; // leading-pt 3 leps
+  xAOD::TruthParticle* l1 = signalLeptons.size()>1 ? signalLeptons[1] : nullptr;
+  xAOD::TruthParticle* l2 = signalLeptons.size()>2 ? signalLeptons[2] : nullptr;
+  xAOD::TruthParticle *la = nullptr, *lb = nullptr; // same-sign leps
+  bool has_ss_pair = has_same_sign_pair(signalLeptons, la, lb);
+
+  bool pass_sr3b   = (num_ss_leptons>=2 && num_jet20_b >=3                 && etmiss>100.0 && meff>600.0);
+  bool pass_sr1b   = (num_ss_leptons>=2 && num_jet20_b >=1 && num_jet50>=4 && etmiss>100.0 && meff>600.0);
+  bool pass_sr0b5j = (num_ss_leptons>=2 && num_jet20_b ==0 && num_jet50>=5 && etmiss>100.0 && meff>600.0);
+  bool pass_sr0b3j = (num_ss_leptons>=3 && num_jet20_b ==0 && num_jet50>=3 && etmiss>100.0 && meff>600.0);
+  bool pass_sr = (pass_sr3b or pass_sr1b or pass_sr0b5j or pass_sr0b3j);
+
+  bool pass_crttZ_base = (signalLeptons.size() >= 3 &&
+                          l0->pt()*mev2gev > 25 &&
+                          l1->pt()*mev2gev > 25 &&
+                          (l2->pt()*mev2gev > 20 || !isElectron(l2)) &&
+                          (20 < etmiss && etmiss < 150) &&
+                          (100 < meff && meff < 900) &&
+                          el_eta137 &&
+                          has_Z_candidate(l0, l1, l2) &&
+                          not pass_sr);
+  bool pass_cr1bExclttZ = (pass_crttZ_base and num_jet20_b == 1 and num_jet25 >= 4);
+  bool pass_cr2bInclttZ = (pass_crttZ_base and num_jet20_b >= 2 and num_jet25 >= 3);
+
+  bool pass_cr2bInclttV =  (signalLeptons.size() >= 2 &&
+                            has_ss_pair &&
+                            la->pt()*mev2gev > 25 &&
+                            lb->pt()*mev2gev > 25  &&
+                            num_jet20_b >= 2  &&
+                            (20 < etmiss && etmiss < 200) &&
+                            (200 < meff && meff < 900) &&
+                            el_eta137 &&
+                            (((is_ee(la, lb) || is_em(la, lb)) && num_jet25 >= 5) ||
+                             (is_mm(la, lb) && num_jet25 >= 3)) &&
+                            not pass_sr);
+  if(print_event)
+      cout<<"pass_sr3b        "<<pass_sr3b       <<endl
+          <<"pass_sr1b        "<<pass_sr1b       <<endl
+          <<"pass_sr0b5j      "<<pass_sr0b5j     <<endl
+          <<"pass_sr0b3j      "<<pass_sr0b3j     <<endl
+          <<"pass_crttZ_base  "<<pass_crttZ_base <<endl
+          <<"pass_cr1bExclttZ "<<pass_cr1bExclttZ<<endl
+          <<"pass_cr2bInclttZ "<<pass_cr2bInclttZ<<endl
+          <<"pass_cr2bInclttV "<<pass_cr2bInclttV<<endl
+          <<endl;
+/*
+
+  bool CR0bExclWWmjj = ((numLept == 2 &&
+                         lep_signal.pT[0] > 30000 &&
+                         lep_signal.pT[1] > 30000   &&
+                         lep_signal.num_leptons_baseline == 2)  &&
+                        n_bjets == 0  &&
+                        my_MET_pT < 200000 &&
+                        my_MET_pT > 30000 &&
+                        meff<900000 &&
+                        meff > 300000 &&
+                        el_eta137 &&
+                        n_jets_40 >= 2 &&
+                        (!lep_signal.has_Z || !lep_signal.has_ee) &&
+                        dijet_mass(&evt, &jet_signal) >500000);
+
+  bool CR0bExclWZ = ((numLept == 3 &&
+                      lep_signal.pT[0] > 30000 &&
+                      lep_signal.pT[1] > 30000 &&
+                      lep_signal.pT[2] > 30000 &&
+                      lep_signal.num_leptons_baseline < 4) &&
+                     n_bjets==0 &&
+                     my_MET_pT < 200000 &&
+                     my_MET_pT > 30000 &&
+                     meff < 900000 &&
+                     meff > 100000 &&
+                     n_jets_25 >= 1 &&
+                     n_jets_25 < 4  );
+//  Z mass window: 80 GeV < M < 100 GeV with OSSF pair.
+*/
 
   //----------------------------
   // Fill Histograms
@@ -404,11 +540,6 @@ EL::StatusCode TruthReader :: execute ()
           }
       }
   };
-
-  bool pass_sr3b   = (num_ss_leptons>=2 && num_jet20_b >=3                 && etmiss>100.0 && meff>600.0);
-  bool pass_sr1b   = (num_ss_leptons>=2 && num_jet20_b >=1 && num_jet50>=4 && etmiss>100.0 && meff>600.0);
-  bool pass_sr0b5j = (num_ss_leptons>=2 && num_jet20_b ==0 && num_jet50>=5 && etmiss>100.0 && meff>600.0);
-  bool pass_sr0b3j = (num_ss_leptons>=3 && num_jet20_b ==0 && num_jet50>=3 && etmiss>100.0 && meff>600.0);
 
   struct FillHistos {
       void operator()(SelectionHistograms &h,
@@ -452,7 +583,10 @@ EL::StatusCode TruthReader :: execute ()
       fillHistos(m_sr0b3j_histos,
                  v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
   }
-
+  if(pass_cr2bInclttV){
+      fillHistos(m_cr2bttV_histos,
+                 v_jet25, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_cr, eventWeight);
+  }
 
   return EL::StatusCode::SUCCESS;
 }
@@ -673,6 +807,7 @@ void TruthReader::generateSrHistograms()
     m_sr1b_histos.clone_with_suffix  (m_inclusive_histos, wk(), "_sr1b",   " (sr1b)");
     m_sr0b5j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b5j", " (sr0b5j)");
     m_sr0b3j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b3j", " (sr0b3j)");
+    m_cr2bttV_histos.clone_with_suffix(m_inclusive_histos, wk(), "_cr2bttV", " (cr2bttV)");
 }
 void TruthReader::SelectionHistograms::add_histograms_to_output(EL::Worker *worker)
 {

@@ -72,6 +72,7 @@ private:
   SelectionHistograms m_sr1b_histos; //!
   SelectionHistograms m_sr0b5j_histos; //!
   SelectionHistograms m_sr0b3j_histos; //!
+  SelectionHistograms m_cr2bttV_histos; //!
   ProgressPrinter m_printer; //!
 
 public:
