@@ -144,6 +144,8 @@ def get_n_and_sumw_of_processed_events(input_filename='', histogram_name='h_numE
     histogram_name = 'h_jetN'
     log.warning('fixme bug h_numEvents')
     input_file = R.TFile.Open(input_filename)
+    if not input_file:
+        raise IOError("missing %s"%input_filename)
     histo = input_file.Get(histogram_name)
     number_of_processed_events = histo.GetEntries()
     sumw_of_processed_events = histo.Integral()
@@ -260,17 +262,22 @@ class HistogramCombiner:
             self.xsec = xsec
             self.input_files_wildcard = input_files_wildcard
             input_files = glob.glob(input_files_wildcard)
-            if not input_files or len(input_files)==1:
+            if not input_files:
                 log.warning("no files matching '%s' : %s"%(input_files_wildcard, str(input_files)))
             self.input_file = self.merge_if_needed(input_files)
+            if not self.input_file:
+                raise IOError("missing input file for %s  using %s"%(self.name, self.input_files_wildcard))
             self.number_of_processed_events, self.sumw_of_processed_events = get_n_and_sumw_of_processed_events(self.input_file)
             self.input_file = R.TFile.Open(self.input_file)
             log.info("using input %s"%self.input_file.GetName())
         def guess_merged_filename(self, input_files=[]):
-            prefix = utils.commonPrefix(input_files)
-            suffix = utils.commonSuffix(input_files)
-            assert prefix and suffix, "guessing merged filename: prefix '%s' suffix '%s' from %s"%(prefix, suffix, str(input_files))
-            output_filename = prefix+'merged.root'
+            if not input_files:
+                raise StandardError("no input files to be merged")
+            uniq_input_dirs=list(set(os.path.dirname(f) for f in input_files))
+            all_in_one_dir = len(uniq_input_dirs)==1
+            if not all_in_one_dir:
+                raise StandardError("files to be merged must be in the same dir: %s"%str(uniq_input_dirs))
+            output_filename = os.path.join(uniq_input_dirs[0], 'merged.root')
             return output_filename
         def merge_if_needed(self, input_files=[]):
             "given files, merge if there's anything new"
@@ -278,7 +285,9 @@ class HistogramCombiner:
             input_files = [f for f in input_files if f is not output_filename]
             # note to self: sometimes the output file can be in the input list...skip it
             newest_input_file = max([f for f in input_files if f is not output_filename], key=os.path.getctime)
-            do_merge = not os.path.exists(output_filename) or os.path.getctime(output_filename)<os.path.getctime(newest_input_file)
+            newest_after_output = os.path.exists(output_filename) and os.path.getctime(output_filename)<os.path.getctime(newest_input_file)
+            if newest_after_output: os.remove(output_filename)
+            do_merge = not os.path.exists(output_filename)
             output_filename = merge(input_files, output_filename) if do_merge else output_filename
             self.input_files = input_files
             return output_filename
