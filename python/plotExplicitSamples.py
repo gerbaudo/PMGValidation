@@ -19,17 +19,23 @@ def main():
     ""
     set_log()
     outdir = './'
+    do_scale = True # False
+    do_alps = not do_scale
     # file_label = 'ttWnp0_scale_sys'
     # plot_label = 'ttWnp0 scale sys'
-    file_label = 'ttW_scale_sys'
-    plot_label = 'ttW scale sys'
+    file_label = 'ttW_scale_sys' if do_scale else 'ttW_alps_sys'
+    plot_label = 'ttW scale sys' if do_scale else 'ttW alps sys'
     normalize_to_unity = False # True
     luminosity = 1.0
 
     combiner = HistogramCombiner()
     combiner.build_samples(group='ttW_sysWgt', selected_samples=['ttWnp0_sysWgt', 'ttWnp1_sysWgt', 'ttWnp2_sysWgt'])
-    combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp', 'ttWnp1_scalUp', 'ttWnp2_scalUp'])
-    combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn', 'ttWnp1_scalDn', 'ttWnp2_scalDn'])
+    if do_scale:
+        combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp', 'ttWnp1_scalUp', 'ttWnp2_scalUp'])
+        combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn', 'ttWnp1_scalDn', 'ttWnp2_scalDn'])
+    else:
+        combiner.build_samples(group='ttW_alpsUp', selected_samples=['ttWnp0_alpsUp', 'ttWnp1_alpsUp', 'ttWnp2_alpsUp'])
+        combiner.build_samples(group='ttW_alpsDn', selected_samples=['ttWnp0_alpsDn', 'ttWnp1_alpsDn', 'ttWnp2_alpsDn'])
     # combiner.build_samples(group='ttW_sysWgt', selected_samples=['ttWnp0_sysWgt'                                  ])
     # combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp'                                  ])
     # combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn'                                  ])
@@ -39,8 +45,6 @@ def main():
     # combiner.build_samples(group='ttW_sysWgt', selected_samples=[                                  'ttWnp2_sysWgt'])
     # combiner.build_samples(group='ttW_scalUp', selected_samples=[                                  'ttWnp2_scalUp'])
     # combiner.build_samples(group='ttW_scalDn', selected_samples=[                                  'ttWnp2_scalDn'])
-    # combiner.build_samples(group='ttW_alpsUp', selected_samples=['ttWnp0_alpsUp', 'ttWnp1_alpsUp', 'ttWnp2_alpsUp'])
-    # combiner.build_samples(group='ttW_alpsDn', selected_samples=['ttWnp0_alpsDn', 'ttWnp1_alpsDn', 'ttWnp2_alpsDn'])
     combiner.normalize_to_unity = normalize_to_unity
 
     # histogram_names = get_histogram_names(input_nom) # todo : get histonames from first file
@@ -60,13 +64,11 @@ def main():
 
     for histogram_name in histogram_names:
         rebin = 'meff' in histogram_name and '_sr' in histogram_name # non-inclusive histos: low stats
-        rebin_factor = 4 if rebin else 1
+        rebin_factor = 5 if rebin else 1
         histograms = combiner.get_histograms(histogram_name=histogram_name)
         h_nom = histograms['ttW_sysWgt']
-        h_up  = histograms['ttW_scalUp']
-        h_dn  = histograms['ttW_scalDn']
-        # h_up  = histograms['ttW_alpsUp']
-        # h_dn  = histograms['ttW_alpsDn']
+        h_up  = histograms['ttW_scalUp' if do_scale else 'ttW_alpsUp']
+        h_dn  = histograms['ttW_scalDn' if do_scale else 'ttW_alpsDn']
         histos = [h_nom, h_up, h_dn]
         for h in histos:
             h.Rebin(rebin_factor)
