@@ -180,67 +180,67 @@ def get_input_samples():
         # ttW nominal
         'ttWnp0_sysWgt' : {
             'input_files' : base_nom+'ttW_410066/hist-ttW_*.root',
-            'xsec' : 0.17556
+            'xsec' : 0.176560
             },
         'ttWnp1_sysWgt' : {
             'input_files' : base_nom+'ttW_410067/hist-ttW_*.root',
-            'xsec' : 0.14134
+            'xsec' : 0.140620
             },
         'ttWnp2_sysWgt' : {
             'input_files' : base_nom+'ttW_410068/hist-ttW_*.root',
-            'xsec' : 0.13792
+            'xsec' : 0.136800
             },
         # ttW scalUp
         'ttWnp0_scalUp' : {
             'input_files' : base+'ttW_610066/hist-ttW_*.root',
-            'xsec' : 0.17776
+            'xsec' : 0.1437
             },
         'ttWnp1_scalUp' : {
             'input_files' : base+'ttW_610067/hist-ttW_*.root',
-            'xsec' : 0.14182
+            'xsec' : 0.11086
             },
         'ttWnp2_scalUp' : {
             'input_files' : base+'ttW_610068/hist-ttW_*.root',
-            'xsec' : 0.13596
+            'xsec' : 0.099048
             },
         # ttW scalDn
         'ttWnp0_scalDn' : {
             'input_files' : base+'ttW_710066/hist-ttW_*.root',
-            'xsec' : 0.17894
+            'xsec' : 0.24284
             },
         'ttWnp1_scalDn' : {
             'input_files' : base+'ttW_710067/hist-ttW_*.root',
-            'xsec' : 0.14156
+            'xsec' : 0.20288
             },
         'ttWnp2_scalDn' : {
             'input_files' : base+'ttW_710068/hist-ttW_*.root',
-            'xsec' : 0.13726
+            'xsec' : 0.21626
             },
         # ttW alpsUp
         'ttWnp0_alpsUp' : {
             'input_files' : base+'ttW_810066/hist-ttW_*.root',
-            'xsec' : 0.17490
+            'xsec' : 0.1838
             },
         'ttWnp1_alpsUp' : {
             'input_files' : base+'ttW_810067/hist-ttW_*.root',
-            'xsec' : 0.14096
+            'xsec' : 0.1446
             },
         'ttWnp2_alpsUp' : {
             'input_files' : base+'ttW_810068/hist-ttW_*.root',
-            'xsec' : 0.13686
+            'xsec' : 0.13922
             },
         # ttW alpsDn
         'ttWnp0_alpsDn' : {
             'input_files' : base+'ttW_910066/hist-ttW_*.root',
-            'xsec' : 0.17532
+            'xsec' : 0.18134
             },
         'ttWnp1_alpsDn' : {
             'input_files' : base+'ttW_910067/hist-ttW_*.root',
-            'xsec' : 0.14216
+            'xsec' : 0.14484
             },
         'ttWnp2_alpsDn' : {
             'input_files' : base+'ttW_910068/hist-ttW_*.root',
-            'xsec' : 0.13632
+            'xsec' : 0.1379
             },
         }
 
