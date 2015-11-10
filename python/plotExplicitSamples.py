@@ -55,6 +55,7 @@ def main():
                        'h_meff_sr1b', 'h_jetN_sr1b',
                        'h_meff_sr0b5j', 'h_jetN_sr0b5j',
                        'h_meff_sr0b3j', 'h_jetN_sr0b3j',
+                       'h_meff_cr2bttV', 'h_jetN_cr2bttV',
                        ]
 
     output_pdf_name = outdir+'/'+file_label+'.pdf'
@@ -173,18 +174,20 @@ def get_input_samples():
     "xsecs from Josh"
     base='out/batch_10k/' # lxplus:work/public/samesign_jets/ttVsystematics/make_plots
     base='batch/out/' # uclhc-1:ss3l/ttVsystematics/make_plots
+    base_nom='batch/2015-11-03/out/' # uclhc-1 take2
+    base='batch/2015-11-05/out/' # uclhc-1 take3 (new samples from Josh)
     return {
         # ttW nominal
         'ttWnp0_sysWgt' : {
-            'input_files' : base+'ttW_410066/hist-ttW_*.root',
+            'input_files' : base_nom+'ttW_410066/hist-ttW_*.root',
             'xsec' : 0.17556
             },
         'ttWnp1_sysWgt' : {
-            'input_files' : base+'ttW_410067/hist-ttW_*.root',
+            'input_files' : base_nom+'ttW_410067/hist-ttW_*.root',
             'xsec' : 0.14134
             },
         'ttWnp2_sysWgt' : {
-            'input_files' : base+'ttW_410068/hist-ttW_*.root',
+            'input_files' : base_nom+'ttW_410068/hist-ttW_*.root',
             'xsec' : 0.13792
             },
         # ttW scalUp
@@ -312,8 +315,8 @@ class HistogramCombiner:
             return sep.join([self.name,
                              "%s (%d files)"%(self.input_files_wildcard, len(self.input_files)),
                              "xsec: %.3E"%self.xsec,
-                             "nEvents: %.1E"%self.number_of_processed_events,
-                             "sumW: %.1E"%self.sumw_of_processed_events])
+                             "nEvents: %.3E"%self.number_of_processed_events,
+                             "sumW: %.3E"%self.sumw_of_processed_events])
 
     def __init__(self):
         self.groups = {} # where the samples will be stored
