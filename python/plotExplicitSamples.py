@@ -25,7 +25,7 @@ def main():
     # plot_label = 'ttWnp0 scale sys'
     file_label = 'ttW_scale_sys' if do_scale else 'ttW_alps_sys'
     plot_label = 'ttW scale sys' if do_scale else 'ttW alps sys'
-    normalize_to_unity = False # True
+    normalize_to_unity = True # False
     luminosity = 1.0
 
     combiner = HistogramCombiner()
@@ -65,7 +65,8 @@ def main():
 
     for histogram_name in histogram_names:
         rebin = 'meff' in histogram_name and '_sr' in histogram_name # non-inclusive histos: low stats
-        rebin_factor = 5 if rebin else 1
+        rebin = True
+        rebin_factor = (25 if 'meff' in histogram_name else 2 if 'jetN' in histogram_name else 1) if rebin else 1
         histograms = combiner.get_histograms(histogram_name=histogram_name)
         h_nom = histograms['ttW_sysWgt']
         h_up  = histograms['ttW_scalUp' if do_scale else 'ttW_alpsUp']
@@ -102,6 +103,37 @@ def main():
             leg.AddEntry(h, format_legend_label(h, l), 'l')
             topPad._po.append(h)
         leg.Draw('same')
+        if True:
+            nom_int = h_nom.Integral()
+            up_int = h_up.Integral()
+            dn_int = h_dn.Integral()
+            print ("normalization change: "
+                   +"{} up {:.1%} down {:.1%} (nom {:.1f}, up {:.1f}, do {:.1f})".format(h_nom.GetName(),
+                                                                                      1.0-up_int/nom_int,
+                                                                                      1.0-dn_int/nom_int,
+                                                                                      nom_int,
+                                                                                      up_int,
+                                                                                      dn_int))
+            def bc(h): return [h.GetBinContent(i) for i in range(1,1+h.GetNbinsX())]
+            def max_frac_variation(h1, h2):
+                "maximum bin-by-bin fractional variation; h1 is denominator, empty bins skipped"
+                bc1 = bc(h1)
+                bc2 = bc(h2)
+                return max([abs(b2/b1) for b1, b2 in zip(bc1, bc2) if b1 and b2])
+            def max_frac_variation_within10(h1, h2):
+                """maximum bin-by-bin fractional variation; h1 is denominator.
+                Bins with <0.1*peak are skipped"""
+                bc1 = bc(h1)
+                bc2 = bc(h2)
+                m1 = max(bc1)
+                m2 = max(bc2)
+                return max([abs(b2/b1) for b1, b2 in zip(bc1, bc2) if b1>0.1*m1 and b2>0.1*m2])
+
+            print ("shape change: "
+                   +"{} up {:.1%} down {:.1%} ".format(h_nom.GetName(),
+                                                       1.0-max_frac_variation_within10(h_up, h_nom),
+                                                       1.0-max_frac_variation_within10(h_dn, h_nom)))
+
         topPad.Update()
         # bottom
         can.cd()
