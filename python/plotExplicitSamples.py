@@ -25,7 +25,7 @@ def main():
     # plot_label = 'ttWnp0 scale sys'
     file_label = 'ttW_scale_sys' if do_scale else 'ttW_alps_sys'
     plot_label = 'ttW scale sys' if do_scale else 'ttW alps sys'
-    normalize_to_unity = True # False
+    normalize_to_unity = False # True
     luminosity = 1.0
 
     combiner = HistogramCombiner()
@@ -45,7 +45,6 @@ def main():
     # combiner.build_samples(group='ttW_sysWgt', selected_samples=[                                  'ttWnp2_sysWgt'])
     # combiner.build_samples(group='ttW_scalUp', selected_samples=[                                  'ttWnp2_scalUp'])
     # combiner.build_samples(group='ttW_scalDn', selected_samples=[                                  'ttWnp2_scalDn'])
-    combiner.normalize_to_unity = normalize_to_unity
 
     # histogram_names = get_histogram_names(input_nom) # todo : get histonames from first file
     # exclude_histograms = ['EventLoop_EventCount']
@@ -58,15 +57,16 @@ def main():
                        'h_meff_cr2bttV', 'h_jetN_cr2bttV',
                        ]
 
+    combiner.compute_normalization_factors()
     output_pdf_name = outdir+'/'+file_label+'.pdf'
     c_summary = R.TCanvas('c_summary', 'plotExplicitSamples sampes summary ')
     combiner.print_sample_summary_to_pdf(c_summary)
     c_summary.SaveAs(output_pdf_name+'(')
 
+
     for histogram_name in histogram_names:
         rebin = 'meff' in histogram_name and '_sr' in histogram_name # non-inclusive histos: low stats
-        rebin = True
-        rebin_factor = (25 if 'meff' in histogram_name else 2 if 'jetN' in histogram_name else 1) if rebin else 1
+        rebin_factor = (5 if 'meff' in histogram_name else 2 if 'jetN' in histogram_name else 1) if rebin else 1
         histograms = combiner.get_histograms(histogram_name=histogram_name)
         h_nom = histograms['ttW_sysWgt']
         h_up  = histograms['ttW_scalUp' if do_scale else 'ttW_alpsUp']
@@ -304,6 +304,7 @@ class HistogramCombiner:
                 raise IOError("missing input file for %s  using %s"%(self.name, self.input_files_wildcard))
             self.number_of_processed_events, self.sumw_of_processed_events = get_n_and_sumw_of_processed_events(self.input_file)
             self.input_file = R.TFile.Open(self.input_file)
+            self.already_scaled = []
             log.info("using input %s"%self.input_file.GetName())
         def guess_merged_filename(self, input_files=[]):
             if not input_files:
@@ -314,6 +315,7 @@ class HistogramCombiner:
                 raise StandardError("files to be merged must be in the same dir: %s"%str(uniq_input_dirs))
             output_filename = os.path.join(uniq_input_dirs[0], 'merged.root')
             return output_filename
+
         def merge_if_needed(self, input_files=[]):
             "given files, merge if there's anything new"
             output_filename = self.guess_merged_filename(input_files)
@@ -329,17 +331,22 @@ class HistogramCombiner:
 
         def get_histogram(self, name=''):
             h = self.input_file.Get(name)
-            entries  = h.GetEntries()
-            lumi = 1.0
-            filter_eff = 1.0 # josh says there's no filter applied
-            k_factor = 1.0 # none for now
-            sumw = self.sumw_of_processed_events # use the sumw of generated/processed events, not the accepted ones
-            scale = (lumi * self.xsec * filter_eff * k_factor / sumw) if sumw else 1.0
-            h.Scale(scale)
-            log.debug("%s : scaling by %.3E"
-                     " (lumi %.1E,  xsec %.3E, filter_eff %.2E, k_factor %.2E, sumw %.2E)"%
-                     (self.name, scale,
-                      lumi,  self.xsec,  filter_eff, k_factor, sumw))
+            if name not in self.already_scaled:
+                entries  = h.GetEntries()
+                lumi = 1.0
+                filter_eff = 1.0 # josh says there's no filter applied
+                k_factor = 1.0 # none for now
+                sumw = self.sumw_of_processed_events # use the sumw of generated/processed events, not the accepted ones
+                scale = (lumi * self.xsec * filter_eff * k_factor / sumw) if sumw else 1.0
+                msg = "scaled %s: was %.4E"%(self.name+'_'+name, h.Integral())
+                h.Scale(scale)
+                log.debug("%s : scaling by %.3E"
+                          " (lumi %.1E,  xsec %.3E, filter_eff %.2E, k_factor %.2E, sumw %.2E)"%
+                          (self.name+'_'+name, scale,
+                           lumi,  self.xsec,  filter_eff, k_factor, sumw))
+                msg += " now %.4E"%h.Integral()
+                log.debug(msg)
+                self.already_scaled.append(name)
             return h
         def summary(self):
             "a one-line summary of this sample"
@@ -353,6 +360,7 @@ class HistogramCombiner:
     def __init__(self):
         self.groups = {} # where the samples will be stored
         self.normalize_to_unity = False
+        self.normalize_to_inclusive = False
 
     def build_samples(self, selected_samples=[], group=''):
         samples = get_input_samples()
@@ -366,13 +374,15 @@ class HistogramCombiner:
         for group in groups:
             samples = self.groups[group]
             histograms = [s.get_histogram(histogram_name) for s in samples]
-            h_tot = histograms[0]
+            h_tot = histograms[0].Clone(histograms[0].GetName()+'_tot')
             for h in histograms[1:]:
                 h_tot.Add(h)
             tot_histograms[group] = h_tot
             if self.normalize_to_unity:
                 integral = h_tot.Integral()
                 h_tot.Scale(1.0/integral if integral else 1.0)
+            elif self.normalize_to_inclusive:
+                h_tot.Scale(self.inclusive_normalization_scale[group])
         return tot_histograms
 
     def print_sample_summary_to_pdf(self, canvas):
@@ -391,6 +401,21 @@ class HistogramCombiner:
          for iLine,line in enumerate(lines) ]
         return text
 
+    def compute_normalization_factors(self, histogram_name='h_meff'):
+        """for each group, compute the normalizazion factor from an
+        inclusive histogram. This can then be used to normalize the
+        selection-specific histograms"""
+        tot_histograms = self.get_histograms(histogram_name)
+        self.inclusive_normalization_scale = {}
+        # to compute these factors we want nominal, inclusive histos normalized to xsec
+        self.normalize_to_unity = False
+        self.normalize_to_inclusive = False
+        for group, normalization_histogram in tot_histograms.iteritems():
+            integral = normalization_histogram.Integral()
+            scale_factor = 1.0/integral if integral else 1.0
+            self.inclusive_normalization_scale[group] = scale_factor
+            log.info("normalization factor for %s : %.3E"%(group, scale_factor))
+        self.normalize_to_inclusive = True
 
 if __name__=='__main__':
     main()
