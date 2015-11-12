@@ -9,6 +9,7 @@ import glob
 import logging as log
 import os
 import utils
+from math import sqrt
 
 import rootUtils as ru
 R = ru.importRoot()
@@ -103,10 +104,25 @@ def main():
             leg.AddEntry(h, format_legend_label(h, l), 'l')
             topPad._po.append(h)
         leg.Draw('same')
+        def integral_and_error(h):
+            error = R.Double(0.0)
+            integral = h.IntegralAndError(1, h.GetNbinsX()+1, error)
+            return integral, error
+        def ratio_and_error(ave=(1.0, 0.01), bve=(2.0, 0.001)):
+            a, sa = ave
+            b, sb = bve
+            r = a/b
+            e = r * sqrt((sa/a)*(sa/a)+(sb/b)*(sb/b))
+            return r, e
         if True:
             nom_int = h_nom.Integral()
             up_int = h_up.Integral()
             dn_int = h_dn.Integral()
+            nom_int, nom_err = integral_and_error(h_nom)
+            up_int, up_err = integral_and_error(h_up)
+            dn_int, dn_err = integral_and_error(h_dn)
+            rup, rupe = ratio_and_error((up_int, up_err), (nom_int, nom_err))
+            rdn, rdne = ratio_and_error((dn_int, dn_err), (nom_int, nom_err))
             print ("normalization change: "
                    +"{} up {:.1%} down {:.1%} (nom {:.1f}, up {:.1f}, do {:.1f})".format(h_nom.GetName(),
                                                                                       1.0-up_int/nom_int,
@@ -114,6 +130,10 @@ def main():
                                                                                       nom_int,
                                                                                       up_int,
                                                                                       dn_int))
+            print ("normalization change: "
+                   +"{} up {:.1%} +/- {:.1%} down {:.1%} +/- {:.1%} ".format(h_nom.GetName(), 1.0-rup, rupe, 1.0-rdn, rdne)
+                   +"(nom {:.2E}  +/- {:.2E}, up {:.2E} +/- {:.2E}, do {:.2E}) +/- {:.2E}".format(nom_int, nom_err, up_int, up_err, dn_int, dn_err))
+
             def bc(h): return [h.GetBinContent(i) for i in range(1,1+h.GetNbinsX())]
             def max_frac_variation(h1, h2):
                 "maximum bin-by-bin fractional variation; h1 is denominator, empty bins skipped"
