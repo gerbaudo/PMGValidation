@@ -1,0 +1,21 @@
+# nominal sample
+# DG-2015-11-13: the official TRUTH1 has 2k events; EVNT has 510k
+# I might need to generate my own TRUTH1...
+mc15_13TeV.361070.Sherpa_CT10_llvvjj_ss_EW6.merge.DAOD_TRUTH1.e3836_p2375/
+# syst variation samples
+user.gerbaudo.truth1.2015-11-13_1118.361643.Sherpa_CT10_llvvjj_ss_EW4_FSFup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361644.Sherpa_CT10_llvvjj_ss_EW4_QSFdown_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361645.Sherpa_CT10_llvvjj_ss_EW4_QSFup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361646.Sherpa_CT10_llvvjj_ss_EW4_RSFdown_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361647.Sherpa_CT10_llvvjj_ss_EW4_RSFup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361648.Sherpa_CT10_llvvjj_ss_EW6_CKKWdown_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361649.Sherpa_CT10_llvvjj_ss_EW6_CKKWup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361650.Sherpa_CT10_llvvjj_ss_EW6_FSFdown_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361651.Sherpa_CT10_llvvjj_ss_EW6_FSFup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361652.Sherpa_CT10_llvvjj_ss_EW6_QSFdown_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361653.Sherpa_CT10_llvvjj_ss_EW6_QSFup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361654.Sherpa_CT10_llvvjj_ss_EW6_RSFdown_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361655.Sherpa_CT10_llvvjj_ss_EW6_RSFup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361656.Sherpa_CT10_llvvjj_ss_EW4_CKKWdown_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361657.Sherpa_CT10_llvvjj_ss_EW4_CKKWup_EXT0/
+user.gerbaudo.truth1.2015-11-13_1118.361658.Sherpa_CT10_llvvjj_ss_EW4_FSFdown_EXT0/
