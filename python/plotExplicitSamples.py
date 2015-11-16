@@ -228,6 +228,7 @@ def get_input_samples():
     base='batch/out/' # uclhc-1:ss3l/ttVsystematics/make_plots
     base_nom='batch/2015-11-03/out/' # uclhc-1 take2
     base='batch/2015-11-05/out/' # uclhc-1 take3 (new samples from Josh)
+    base_wwjj='batch/2015-11-16/out/'
     return {
         # ttW nominal
         'ttWnp0_sysWgt' : {
@@ -294,6 +295,24 @@ def get_input_samples():
             'input_files' : base+'ttW_910068/hist-ttW_*.root',
             'xsec' : 0.1379
             },
+        # wwjj, with xsec from AMI
+        'wwjj_nom'      : { 'input_files' : base_wwjj+'WWjj_361070/*.root', 'xsec' : 0.043004 },
+        'wwjj_FSFup'    : { 'input_files' : base_wwjj+'WWjj_361643/*.root', 'xsec' : 0.025199 },
+        'wwjj_QSFdown'  : { 'input_files' : base_wwjj+'WWjj_361644/*.root', 'xsec' : 0.026935 },
+        'wwjj_QSFup'    : { 'input_files' : base_wwjj+'WWjj_361645/*.root', 'xsec' : 0.025422 },
+        'wwjj_RSFdown'  : { 'input_files' : base_wwjj+'WWjj_361646/*.root', 'xsec' : 0.033690 },
+        'wwjj_RSFup'    : { 'input_files' : base_wwjj+'WWjj_361647/*.root', 'xsec' : 0.021188 },
+        'wwjj_CKKWdown' : { 'input_files' : base_wwjj+'WWjj_361648/*.root', 'xsec' : 0.043657 },
+        'wwjj_CKKWup'   : { 'input_files' : base_wwjj+'WWjj_361649/*.root', 'xsec' : 0.042895 },
+        'wwjj_FSFdown'  : { 'input_files' : base_wwjj+'WWjj_361650/*.root', 'xsec' : 0.044477 },
+        'wwjj_FSFup'    : { 'input_files' : base_wwjj+'WWjj_361651/*.root', 'xsec' : 0.042077 },
+        'wwjj_QSFdown'  : { 'input_files' : base_wwjj+'WWjj_361652/*.root', 'xsec' : 0.043747 },
+        'wwjj_QSFup'    : { 'input_files' : base_wwjj+'WWjj_361653/*.root', 'xsec' : 0.043590 },
+        'wwjj_RSFdown'  : { 'input_files' : base_wwjj+'WWjj_361654/*.root', 'xsec' : 0.043010 },
+        'wwjj_RSFup'    : { 'input_files' : base_wwjj+'WWjj_361655/*.root', 'xsec' : 0.043495 },
+        'wwjj_CKKWdown' : { 'input_files' : base_wwjj+'WWjj_361656/*.root', 'xsec' : 0.026241 },
+        'wwjj_CKKWup'   : { 'input_files' : base_wwjj+'WWjj_361657/*.root', 'xsec' : 0.024757 },
+        'wwjj_FSFdown'  : { 'input_files' : base_wwjj+'WWjj_361658/*.root', 'xsec' : 0.027240 },
         }
 
 def set_log():
