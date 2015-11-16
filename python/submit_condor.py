@@ -20,6 +20,7 @@
 #  October 2015
 
 import logging as log
+import shutil
 import subprocess
 import sys
 import errno
@@ -54,8 +55,8 @@ def main() :
                      "brick-only")
     submit = args.submit
     log.debug("options:\ninput file: {}\npattern: {}\nsite option: {}".format(input_files, pattern, site_option))
-    for iInput_file, input_file in enumerate(input_files) :
-        iSample = 0
+    iSample = 0
+    for input_file in input_files:
         file_label = without_extension(input_file)
         with open(input_file) as lines :
             samples = [l.strip() for l in lines if is_interesting_line(line=l, regexp=pattern)]
@@ -74,18 +75,22 @@ def main() :
                     mkdir_p(d)
                 # now submit one job per file
                 fax_files = get_FAX_files(sample)
-                for fax_file in fax_files :
+                for iFax_file, fax_file in enumerate(fax_files) :
                     log.debug("\tfile: %s"%fax_file)
-                    sub_name = "%s_%03d_%03d"%(sample_label, iInput_file, iSample)
+                    sub_name = "%s_%03d_%03d"%(sample_label, iSample, iFax_file)
                     condor_name = sub_name+'.condor'
                     input_container = sample
-                    # if 'user.gerbaudo.6648972.EXT0._000005.DAOD_TRUTH1.pool.root' not in fax_file:
-                    #     continue
-                    condor_script = build_condor_script(site_option=site_option, samplename=sub_name, abs_dest_dir=os.path.abspath(out_dir), script_dir=scr_dir)
-                    condor_execut = build_condor_executable(samplename=sub_name, script_dir=scr_dir, abs_dest_dir=os.path.abspath(out_dir))
-
                     base_dir = os.environ.get('ROOTCOREBIN').rstrip('/').replace('RootCoreBin', '')
                     script_arguments = ' '+base_dir+' '+fax_file+' '+sub_name+' '+out_dir
+                    # if 'user.gerbaudo.6648972.EXT0._000005.DAOD_TRUTH1.pool.root' not in fax_file:
+                    #     continue
+                    condor_script = build_condor_script(site_option=site_option, samplename=sub_name,
+                                                        abs_dest_dir=os.path.abspath(out_dir), script_dir=scr_dir)
+                    condor_execut = build_condor_executable(samplename=sub_name, script_dir=scr_dir,
+                                                            abs_dest_dir=os.path.abspath(out_dir),
+                                                            base_dir=base_dir, input_file=fax_file, sample=sub_name,
+                                                            output_dir=out_dir)
+
                     log_cmd = ' -append "log    = %s/%s.log" '%(os.path.abspath(log_dir), sub_name)
                     err_cmd = ' -append "error  = %s/%s.out" '%(os.path.abspath(log_dir), sub_name)
                     out_cmd = ' -append "output = %s/%s.err" '%(os.path.abspath(log_dir), sub_name)
@@ -95,7 +100,7 @@ def main() :
                     log.debug(run_cmd)
                     if submit:
                         subprocess.call(run_cmd, shell=True)
-                    iSample += 1
+                iSample += 1
 
 
 def build_condor_script(site_option='', samplename='', abs_dest_dir='', script_dir='batch/script') :
@@ -137,15 +142,16 @@ queue
     file_.close()
     return condor_submit_name
 
-def build_condor_executable(samplename='', script_dir='batch/script', abs_dest_dir='') :
+def build_condor_executable(samplename='', script_dir='batch/script', abs_dest_dir='',
+                            base_dir='', input_file='', sample='', output_dir='') :
     "If condor script is not available, write one"
     condor_exe_name = script_dir+'/'+samplename+'.sh'
     template = """#!/bin/bash
 
-BASE_DIR=$1
-INPUT_FILE=$2
-SAMPLE=$3
-OUTPUT_DIR=$4
+BASE_DIR=%(base_dir)s
+INPUT_FILE=%(input_file)s
+SAMPLE=%(sample)s
+OUTPUT_DIR=%(output_dir)s
 
 # set -e # exit on error
 # set -u # exit on undefined variable
@@ -198,7 +204,9 @@ echo Finished `date`
 
 """
     file_ = open(condor_exe_name, 'w')
-    file_.write(template%{'abs_dest_dir':abs_dest_dir})
+    file_.write(template%{'abs_dest_dir':abs_dest_dir,
+                          'base_dir':base_dir, 'input_file':input_file,
+                          'sample':sample, 'output_dir':output_dir})
     file_.close()
     return condor_exe_name
 
@@ -219,6 +227,9 @@ def get_FAX_files(input_dataset) :
         if not file : continue
         file = file.strip()
         out_files.append(file)
+    # store on the side the list of files. Just for debugging
+    mkdir_p('batch/tmp')
+    shutil.copyfile('tmp_glfns.txt', 'batch/tmp/'+input_dataset.strip().rstrip('/')+'.txt')
     cmd = "rm tmp_glfns.txt"
     subprocess.call(cmd, shell=True)
     return out_files
