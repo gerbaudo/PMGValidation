@@ -231,70 +231,25 @@ def get_input_samples():
     base_wwjj='batch/2015-11-16/out/'
     return {
         # ttW nominal
-        'ttWnp0_sysWgt' : {
-            'input_files' : base_nom+'ttW_410066/hist-ttW_*.root',
-            'xsec' : 0.176560
-            },
-        'ttWnp1_sysWgt' : {
-            'input_files' : base_nom+'ttW_410067/hist-ttW_*.root',
-            'xsec' : 0.140620
-            },
-        'ttWnp2_sysWgt' : {
-            'input_files' : base_nom+'ttW_410068/hist-ttW_*.root',
-            'xsec' : 0.136800
-            },
+        'ttWnp0_sysWgt' : { 'input_files' : base_nom+'ttW_410066/hist-ttW_*.root', 'xsec' : 0.176560 },
+        'ttWnp1_sysWgt' : { 'input_files' : base_nom+'ttW_410067/hist-ttW_*.root', 'xsec' : 0.140620 },
+        'ttWnp2_sysWgt' : { 'input_files' : base_nom+'ttW_410068/hist-ttW_*.root', 'xsec' : 0.136800 },
         # ttW scalUp
-        'ttWnp0_scalUp' : {
-            'input_files' : base+'ttW_610066/hist-ttW_*.root',
-            'xsec' : 0.1437
-            },
-        'ttWnp1_scalUp' : {
-            'input_files' : base+'ttW_610067/hist-ttW_*.root',
-            'xsec' : 0.11086
-            },
-        'ttWnp2_scalUp' : {
-            'input_files' : base+'ttW_610068/hist-ttW_*.root',
-            'xsec' : 0.099048
-            },
+        'ttWnp0_scalUp' : { 'input_files' : base+'ttW_610066/hist-ttW_*.root', 'xsec' : 0.1437 },
+        'ttWnp1_scalUp' : { 'input_files' : base+'ttW_610067/hist-ttW_*.root', 'xsec' : 0.11086 },
+        'ttWnp2_scalUp' : { 'input_files' : base+'ttW_610068/hist-ttW_*.root', 'xsec' : 0.099048 },
         # ttW scalDn
-        'ttWnp0_scalDn' : {
-            'input_files' : base+'ttW_710066/hist-ttW_*.root',
-            'xsec' : 0.24284
-            },
-        'ttWnp1_scalDn' : {
-            'input_files' : base+'ttW_710067/hist-ttW_*.root',
-            'xsec' : 0.20288
-            },
-        'ttWnp2_scalDn' : {
-            'input_files' : base+'ttW_710068/hist-ttW_*.root',
-            'xsec' : 0.21626
-            },
+        'ttWnp0_scalDn' : { 'input_files' : base+'ttW_710066/hist-ttW_*.root', 'xsec' : 0.24284 },
+        'ttWnp1_scalDn' : { 'input_files' : base+'ttW_710067/hist-ttW_*.root', 'xsec' : 0.20288 },
+        'ttWnp2_scalDn' : { 'input_files' : base+'ttW_710068/hist-ttW_*.root', 'xsec' : 0.21626 },
         # ttW alpsUp
-        'ttWnp0_alpsUp' : {
-            'input_files' : base+'ttW_810066/hist-ttW_*.root',
-            'xsec' : 0.1838
-            },
-        'ttWnp1_alpsUp' : {
-            'input_files' : base+'ttW_810067/hist-ttW_*.root',
-            'xsec' : 0.1446
-            },
-        'ttWnp2_alpsUp' : {
-            'input_files' : base+'ttW_810068/hist-ttW_*.root',
-            'xsec' : 0.13922
-            },
+        'ttWnp0_alpsUp' : { 'input_files' : base+'ttW_810066/hist-ttW_*.root', 'xsec' : 0.1838 },
+        'ttWnp1_alpsUp' : { 'input_files' : base+'ttW_810067/hist-ttW_*.root', 'xsec' : 0.1446 },
+        'ttWnp2_alpsUp' : { 'input_files' : base+'ttW_810068/hist-ttW_*.root', 'xsec' : 0.13922 },
         # ttW alpsDn
-        'ttWnp0_alpsDn' : {
-            'input_files' : base+'ttW_910066/hist-ttW_*.root',
-            'xsec' : 0.18134
-            },
-        'ttWnp1_alpsDn' : {
-            'input_files' : base+'ttW_910067/hist-ttW_*.root',
-            'xsec' : 0.14484
-            },
-        'ttWnp2_alpsDn' : {
-            'input_files' : base+'ttW_910068/hist-ttW_*.root',
-            'xsec' : 0.1379
-            },
+        'ttWnp0_alpsDn' : { 'input_files' : base+'ttW_910066/hist-ttW_*.root', 'xsec' : 0.18134 },
+        'ttWnp1_alpsDn' : { 'input_files' : base+'ttW_910067/hist-ttW_*.root', 'xsec' : 0.14484 },
+        'ttWnp2_alpsDn' : { 'input_files' : base+'ttW_910068/hist-ttW_*.root', 'xsec' : 0.1379 },
         # wwjj, with xsec from AMI
         'wwjj_nom'      : { 'input_files' : base_wwjj+'WWjj_361070/*.root', 'xsec' : 0.043004 },
         'wwjj_FSFup'    : { 'input_files' : base_wwjj+'WWjj_361643/*.root', 'xsec' : 0.025199 },
