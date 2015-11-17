@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <cstdio> // printf
 using namespace std;
 
 const double mev2gev = 1.0e-3;
@@ -183,6 +184,13 @@ bool has_same_sign_pair(std::vector<xAOD::TruthParticle*> &leptons,
     l0 = l1 = nullptr; // clear output
     sort(leptons.begin(), leptons.end(), byPt);
     std::vector<xAOD::TruthParticle*> lplus, lminus;
+    // printf("has_same_sign_pair [%zu]: ", leptons.size());
+    // for(auto l : leptons)
+    //     printf("%s%s %.2f, ",
+    //            (isElectron(l)?"el": isMuon(l)?"mu":"??"),
+    //            (l->charge()>0 ? "+": l->charge()<0 ? "-": "?"),
+    //            l->pt()*mev2gev);
+    // printf("\n");
     for(auto l : leptons) {
         if(l->pt()*mev2gev>20.0) {
             if(l->charge()>0) lplus.push_back(l);
@@ -305,12 +313,21 @@ EL::StatusCode TruthReader :: execute ()
   xAOD::JetContainer::const_iterator jet_end = jets->end();
   for( ; jet_itr != jet_end; ++jet_itr ) {
     if(( (*jet_itr)->pt() * 0.001) < 20 ) continue;
-
     xAOD::Jet* jet = new xAOD::Jet();
     jet->makePrivateStore( **jet_itr );
     v_jet.push_back(jet);
   }
-
+  if(print_event) {
+      printf("---jets---\n");
+      printf("before [%zu]: ", jets->size());
+      for(jet_itr = jets->begin() ; jet_itr != jet_end; ++jet_itr )
+          printf("pt %.2f (%.2f, %.2f), ", (*jet_itr)->pt()*mev2gev, abs((*jet_itr)->eta()), (*jet_itr)->phi());
+      printf("\n");
+      printf("after [%zu]: ", v_jet.size());
+      for(auto j : v_jet)
+          printf("pt %.2f (%.2f, %.2f), ", j->pt()*mev2gev, abs(j->eta()), j->phi());
+      printf("\n");
+  }
   //----------------------------
   // Electron
   //---------------------------
@@ -324,10 +341,27 @@ EL::StatusCode TruthReader :: execute ()
   for( ; electron_itr != electron_end; ++electron_itr ) {
     if(( (*electron_itr)->pt() * 0.001) < 10 ) continue;
     if( fabs((*electron_itr)->eta()) > 2.47 ) continue;
-
+    bool is_prompt = ((*electron_itr)->auxdata<unsigned int>( "classifierParticleType" ) == 2);
+    if(not is_prompt) continue;
     xAOD::TruthParticle* electron = new xAOD::TruthParticle();
     electron->makePrivateStore( **electron_itr );
     v_electron.push_back(electron);
+  }
+  if(print_event) {
+      printf("---electrons---\n");
+      printf("before [%zu]: ", electrons->size());
+      for(electron_itr = electrons->begin(); electron_itr != electron_end; ++electron_itr )
+          printf ("el%s pt %.2f (%.2f, %.2f), ",
+                  ((*electron_itr)->charge()>0 ? "+": (*electron_itr)->charge()<0 ? "-": "?"),
+                  (*electron_itr)->pt()*mev2gev,
+                  abs((*electron_itr)->eta()), (*electron_itr)->phi());
+      printf("\n");
+      printf("after [%zu]: ",v_electron.size());
+      for(auto l : v_electron)
+          printf ("el%s pt %.2f (%.2f, %.2f), ",
+                  (l->charge()>0 ? "+": l->charge()<0 ? "-": "?"),
+                  l->pt()*mev2gev, abs(l->eta()), l->phi());
+      printf("\n");
   }
 
   //----------------------------
@@ -343,10 +377,27 @@ EL::StatusCode TruthReader :: execute ()
   for( ; muon_itr != muon_end; ++muon_itr ) {
     if(( (*muon_itr)->pt() * 0.001) < 10 ) continue;
     if( fabs((*muon_itr)->eta()) > 2.4 ) continue;
-
+    bool is_prompt = ((*muon_itr)->auxdata<unsigned int>( "classifierParticleType" ) == 6);
+    if(not is_prompt) continue;
     xAOD::TruthParticle* muon = new xAOD::TruthParticle();
     muon->makePrivateStore( **muon_itr );
     v_muon.push_back(muon);
+  }
+  if(print_event) {
+      printf("---muons---\n");
+      printf("before [%zu]: ", muons->size());
+      for(muon_itr = muons->begin(); muon_itr != muon_end; ++muon_itr )
+          printf ("mu%s pt %.2f (%.2f, %.2f), ",
+                  ((*muon_itr)->charge()>0 ? "+": (*muon_itr)->charge()<0 ? "-": "?"),
+                  (*muon_itr)->pt()*mev2gev,
+                  abs((*muon_itr)->eta()), (*muon_itr)->phi());
+      printf("\n");
+      printf("after [%zu]: ",v_muon.size());
+      for(auto l : v_muon)
+          printf ("mu%s pt %.2f (%.2f, %.2f), ",
+                  (l->charge()>0 ? "+": l->charge()<0 ? "-": "?"),
+                  l->pt()*mev2gev, abs(l->eta()), l->phi());
+      printf("\n");
   }
 
   //----------------------------
