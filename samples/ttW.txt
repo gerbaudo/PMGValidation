@@ -14,10 +14,10 @@
 # user.gerbaudo:user.gerbaudo.truth1.2015-10-05_195129.910067.13TeV_ttW_alpsDn_EXT0/
 # user.gerbaudo:user.gerbaudo.truth1.2015-10-05_195206.910068.13TeV_ttW_alpsDn_EXT0/
 # # official samples
-# user.gerbaudo:user.gerbaudo.truth1.2015-11-02_120434.410066.MadGraphPythia8EvtGen_A14NNPDF23LO_ttW_Np0_EXT0/
-# user.gerbaudo:user.gerbaudo.truth1.2015-11-02_120434.410067.MadGraphPythia8EvtGen_A14NNPDF23LO_ttW_Np1_EXT0/
-# user.gerbaudo:user.gerbaudo.truth1.2015-11-02_120434.410068.MadGraphPythia8EvtGen_A14NNPDF23LO_ttW_Np2_EXT0/
-
+user.gerbaudo:user.gerbaudo.truth1.2015-11-02_120434.410066.MadGraphPythia8EvtGen_A14NNPDF23LO_ttW_Np0_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-11-02_120434.410067.MadGraphPythia8EvtGen_A14NNPDF23LO_ttW_Np1_EXT0/
+user.gerbaudo:user.gerbaudo.truth1.2015-11-02_120434.410068.MadGraphPythia8EvtGen_A14NNPDF23LO_ttW_Np2_EXT0/
+# newer syst from Josh
 user.gerbaudo.truth3.2015-11-04_235054.610066.13TeV_ttW_scalUp_EXT0/
 user.gerbaudo.truth3.2015-11-04_235147.610067.13TeV_ttW_scalUp_EXT0/
 user.gerbaudo.truth3.2015-11-04_235240.610068.13TeV_ttW_scalUp_EXT0/
@@ -30,3 +30,5 @@ user.gerbaudo.truth3.2015-11-04_235752.810068.13TeV_ttW_alpsUp_EXT0/
 user.gerbaudo.truth3.2015-11-04_235840.910066.13TeV_ttW_alpsDn_EXT0/
 user.gerbaudo.truth3.2015-11-04_235924.910067.13TeV_ttW_alpsDn_EXT0/
 user.gerbaudo.truth3.2015-11-04_235014.910068.13TeV_ttW_alpsDn_EXT0/
+# sherpa syst from Rohin
+user.gerbaudo:user.gerbaudo.truth1.2015-11-17_1015.sherpa2.2_TTW_13TeV_EXT0/
