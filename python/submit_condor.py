@@ -55,15 +55,16 @@ def main() :
                      "brick-only")
     submit = args.submit
     log.debug("options:\ninput file: {}\npattern: {}\nsite option: {}".format(input_files, pattern, site_option))
-    iSample = 0
     for input_file in input_files:
         file_label = without_extension(input_file)
+        iSample = 0
         with open(input_file) as lines :
             samples = [l.strip() for l in lines if is_interesting_line(line=l, regexp=pattern)]
             check_if_scoped(samples)
             for scoped_sample in samples :
                 sample = drop_scope(scoped_sample)
-                sample_label = file_label+'_'+dsid_from_samplename(sample)
+                dsid = dsid_from_samplename(sample)
+                sample_label = "{0:s}_{1:s}".format(file_label, dsid if dsid else str(iSample))
                 if not re.search(pattern, sample):
                     continue
                 log.info("\t[%s] :  %s"%(sample_label, sample))
@@ -262,7 +263,7 @@ def without_extension(filename=''):
 def dsid_from_samplename(samplename=''):
     "expect dsid to be a 6-digit number between two dots"
     match = re.search('\.(?P<dsid>\d{6})\.', samplename)
-    return match.group('dsid')
+    return match.group('dsid') if match else None
 
 def set_log(verbose, debug):
     if verbose:
