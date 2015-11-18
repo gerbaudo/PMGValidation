@@ -654,6 +654,14 @@ EL::StatusCode TruthReader :: execute ()
       fillHistos(m_sr0b3j_histos,
                  v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
+  if(pass_cr1bExclttZ){
+      fillHistos(m_cr1bttZ_histos,
+                 v_jet25, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
+  }
+  if(pass_cr2bInclttZ){
+      fillHistos(m_cr2bttZ_histos,
+                 v_jet25, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
+  }
   if(pass_cr2bInclttV){
       fillHistos(m_cr2bttV_histos,
                  v_jet25, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
@@ -882,6 +890,8 @@ void TruthReader::generateSrHistograms()
     m_sr1b_histos.clone_with_suffix  (m_inclusive_histos, wk(), "_sr1b",   " (sr1b)");
     m_sr0b5j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b5j", " (sr0b5j)");
     m_sr0b3j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b3j", " (sr0b3j)");
+    m_cr1bttZ_histos.clone_with_suffix(m_inclusive_histos, wk(), "_cr1bttZ", " (cr1bttZ)");
+    m_cr2bttZ_histos.clone_with_suffix(m_inclusive_histos, wk(), "_cr2bttZ", " (cr2bttZ)");
     m_cr2bttV_histos.clone_with_suffix(m_inclusive_histos, wk(), "_cr2bttV", " (cr2bttV)");
 }
 void TruthReader::SelectionHistograms::add_histograms_to_output(EL::Worker *worker)
