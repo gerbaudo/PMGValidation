@@ -4,3 +4,5 @@ user.gerbaudo.truth1.2015-11-13_1728.410113.MadGraphPythia8EvtGen_A14NNPDF23LO_t
 user.gerbaudo.truth1.2015-11-13_1728.410114.MadGraphPythia8EvtGen_A14NNPDF23LO_ttmumu_Np1_EXT0
 user.gerbaudo.truth1.2015-11-13_1728.410115.MadGraphPythia8EvtGen_A14NNPDF23LO_tttautau_Np0_EXT0
 user.gerbaudo.truth1.2015-11-13_1728.410116.MadGraphPythia8EvtGen_A14NNPDF23LO_tttautau_Np1_EXT0
+# syst sherpa from Rohin
+user.gerbaudo.truth1.2015-11-17_1015.16-11-2015-sherpa2.2_ttll_EXT0
