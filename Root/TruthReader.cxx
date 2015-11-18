@@ -14,12 +14,16 @@
 #include "xAODJet/JetAuxContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
 
+#include <TH2F.h>
+
 #include <algorithm>
 #include <iostream>
 #include <cstdio> // printf
 using namespace std;
 
 const double mev2gev = 1.0e-3;
+
+typedef map<int, int> JftMultiplicity_t; // first=flavor, second=multiplicity
 
 /// Helper macro for checking xAOD::TReturnCode return values
 #define EL_RETURN_CHECK( CONTEXT, EXP )			   \
@@ -109,6 +113,9 @@ EL::StatusCode TruthReader :: histInitialize ()
   h.met    = new TH1F("h_met", "h_met", 50, 0, 500);
   h.metPhi = new TH1F("h_metPhi", "h_metPhi", 20, 0, 3.14);
   h.numEvents = new TH1F("h_numEvents", "h_numEvents", 1, 0.5, 1.5);
+  h.jetFlavorMultiplicity = new TH2F("h_jetFlavorMultiplicity", "h_jetFlavorMultiplicity",
+                                     30+1, -0.5, 30.0, // pdg
+                                     20+1, -0.5, 20.0); // multiplicity
 
   h.sumw2();
   h.add_histograms_to_output(wk());
@@ -325,7 +332,8 @@ EL::StatusCode TruthReader :: execute ()
       printf("\n");
       printf("after [%zu]: ", v_jet.size());
       for(auto j : v_jet)
-          printf("pt %.2f (%.2f, %.2f), ", j->pt()*mev2gev, abs(j->eta()), j->phi());
+          printf("pt %.2f (%.2f, %.2f) truth %d, ",
+                 j->pt()*mev2gev, abs(j->eta()), j->phi(), abs( j->auxdata<int>("PartonTruthLabelID") ));
       printf("\n");
   }
   //----------------------------
@@ -455,10 +463,17 @@ EL::StatusCode TruthReader :: execute ()
       }
     }
   }
+
+  JftMultiplicity_t truthJetFlavorMultiplicity;
   std::vector<xAOD::Jet*> v_bjet;
   for(const auto jet : v_jet) {
-      if(abs( jet->auxdata<int>("PartonTruthLabelID") ) == 5)
+      int flavor = abs( jet->auxdata<int>("PartonTruthLabelID"));
+      if(flavor == 5)
           v_bjet.push_back(jet);
+      if(truthJetFlavorMultiplicity.find(flavor)!=truthJetFlavorMultiplicity.end())
+          truthJetFlavorMultiplicity[flavor] += 1;
+      else
+          truthJetFlavorMultiplicity[flavor] = 1;
   }
 
   std::vector<xAOD::Jet*> v_jet50;
@@ -566,7 +581,8 @@ EL::StatusCode TruthReader :: execute ()
   //---------------------------
 
   struct FillJetHistos {
-      void operator()(const std::vector<xAOD::Jet*> &jets, TH1 *n, TH1 *pt, TH1 *e, TH1 *eta, TH1 *phi, double weight) {
+      void operator()(const std::vector<xAOD::Jet*> &jets,
+                      TH1 *n, TH1 *pt, TH1 *e, TH1 *eta, TH1 *phi, double weight) {
           n->Fill(jets.size(), weight);
           for(const auto jet : jets) {
               pt->Fill( ( jet->pt()) * mev2gev, weight);
@@ -598,6 +614,7 @@ EL::StatusCode TruthReader :: execute ()
                       const std::vector<xAOD::Jet*> &bjets,
                       const std::vector<xAOD::TruthParticle*> &electrons,
                       const std::vector<xAOD::TruthParticle*> &muons,
+                      const JftMultiplicity_t &jftm,
                       double &etmiss,
                       double &etmissPhi,
                       double &meff,
@@ -611,32 +628,35 @@ EL::StatusCode TruthReader :: execute ()
       h.met->Fill(etmiss, weight );
       h.metPhi->Fill(etmissPhi, weight );
       h.meff->Fill(meff , weight);
+      TH2* hjfm = static_cast<TH2*>(h.jetFlavorMultiplicity);
+      for(const auto &fm : jftm)
+          hjfm->Fill(fm.first, fm.second, weight);
       }
   } fillHistos;
-
+  const JftMultiplicity_t &jftm = truthJetFlavorMultiplicity;
   if(true){
       fillHistos(m_inclusive_histos,
-                 v_jet, v_bjet, v_electron, v_muon, etmiss, etmissPhi, meff, eventWeight);
+                 v_jet, v_bjet, v_electron, v_muon, jftm, etmiss, etmissPhi, meff, eventWeight);
   }
   if(pass_sr3b){
       fillHistos(m_sr3b_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr1b){
       fillHistos(m_sr1b_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr0b5j){
       fillHistos(m_sr0b5j_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr0b3j){
       fillHistos(m_sr0b3j_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_cr2bInclttV){
       fillHistos(m_cr2bttV_histos,
-                 v_jet25, v_bjet20, v_electron, v_muon, etmiss, etmissPhi, meff_cr, eventWeight);
+                 v_jet25, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
   }
 
   return EL::StatusCode::SUCCESS;
@@ -801,6 +821,9 @@ EL::StatusCode TruthReader :: histFinalize ()
   h.numEvents->GetXaxis()->SetTitle(" weight==1 ");
   h.numEvents->SetLineColor( kBlue + 2);
 
+  h.jetFlavorMultiplicity->GetXaxis()->SetTitle("PartonTruthLabelID");
+  h.jetFlavorMultiplicity->GetYaxis()->SetTitle("multiplicity");
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -846,6 +869,7 @@ void TruthReader::SelectionHistograms::clone_with_suffix(TruthReader::SelectionH
     met            = with_suffix(input.met        );
     metPhi         = with_suffix(input.metPhi     );
     numEvents      = with_suffix(input.numEvents  );
+    jetFlavorMultiplicity = with_suffix(input.jetFlavorMultiplicity);
 
     add_histograms_to_output(worker);
 }

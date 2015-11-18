@@ -44,13 +44,15 @@ private:
     TH1 *met;
     TH1 *metPhi;
     TH1 *numEvents;
+    TH1 *jetFlavorMultiplicity; // in fact a th2
     std::vector<TH1*> histograms() {
       return {
         jetN, jetPt, jetE, jetEta, jetPhi,
           bjetN, bjetPt, bjetE, bjetEta, bjetPhi,
           electronN, electronPt, electronE, electronEta, electronPhi, electronQ,
           muonN, muonPt, muonE, muonEta, muonPhi, muonQ,
-          meff, met, metPhi, numEvents
+          meff, met, metPhi, numEvents,
+          jetFlavorMultiplicity
           };
     }
     void set_to_nullptr() {
