@@ -1,8 +1,11 @@
 # nominal sample
-# DG-2015-11-13: the official TRUTH1 has 2k events; EVNT has 510k
-# I might need to generate my own TRUTH1...
-mc15_13TeV.361069.Sherpa_CT10_llvvjj_ss_EW4.merge.DAOD_TRUTH1.e3836_p2375/
-mc15_13TeV.361070.Sherpa_CT10_llvvjj_ss_EW6.merge.DAOD_TRUTH1.e3836_p2375/
+# DG-2015-11-13: the official TRUTH1 (2k events)
+# mc15_13TeV.361069.Sherpa_CT10_llvvjj_ss_EW4.merge.DAOD_TRUTH1.e3836_p2375/
+# mc15_13TeV.361070.Sherpa_CT10_llvvjj_ss_EW6.merge.DAOD_TRUTH1.e3836_p2375/
+# my own TRUTH1 (more stats)
+user.gerbaudo.truth1.2015-11-13_1728.361069.Sherpa_CT10_llvvjj_ss_EW4_EXT0
+user.gerbaudo.truth1.2015-11-13_1728.361070.Sherpa_CT10_llvvjj_ss_EW6_EXT0
+
 # syst variation samples
 user.gerbaudo.truth1.2015-11-13_1118.361643.Sherpa_CT10_llvvjj_ss_EW4_FSFup_EXT0/
 user.gerbaudo.truth1.2015-11-13_1118.361644.Sherpa_CT10_llvvjj_ss_EW4_QSFdown_EXT0/

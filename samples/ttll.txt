@@ -1,0 +1,6 @@
+user.gerbaudo.truth1.2015-11-13_1728.410111.MadGraphPythia8EvtGen_A14NNPDF23LO_ttee_Np0_EXT0
+user.gerbaudo.truth1.2015-11-13_1728.410112.MadGraphPythia8EvtGen_A14NNPDF23LO_ttee_Np1_EXT0
+user.gerbaudo.truth1.2015-11-13_1728.410113.MadGraphPythia8EvtGen_A14NNPDF23LO_ttmumu_Np0_EXT0
+user.gerbaudo.truth1.2015-11-13_1728.410114.MadGraphPythia8EvtGen_A14NNPDF23LO_ttmumu_Np1_EXT0
+user.gerbaudo.truth1.2015-11-13_1728.410115.MadGraphPythia8EvtGen_A14NNPDF23LO_tttautau_Np0_EXT0
+user.gerbaudo.truth1.2015-11-13_1728.410116.MadGraphPythia8EvtGen_A14NNPDF23LO_tttautau_Np1_EXT0
