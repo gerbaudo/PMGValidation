@@ -15,6 +15,7 @@
 #include "xAODMissingET/MissingETContainer.h"
 
 #include <TH2F.h>
+#include <TRandom.h>
 
 #include <algorithm>
 #include <iostream>
@@ -52,6 +53,7 @@ TruthReader :: TruthReader():
   // called on both the submission and the worker node.  Most of your
   // initialization code will go into histInitialize() and
   // initialize().
+    gRandom->SetSeed(12345);
 }
 
 
@@ -83,26 +85,26 @@ EL::StatusCode TruthReader :: histInitialize ()
   // connected.
     SelectionHistograms &h = m_inclusive_histos;
   // Jet
-  h.jetN   = new TH1F("h_jetN", "h_jetN", 25, 0, 25);
+  h.jetN   = new TH1F("h_jetN", "h_jetN", 25+1, -0.5, 25.5);
   h.jetPt  = new TH1F("h_jetPt", "h_jetPt", 50, 0, 1000);
   h.jetE   = new TH1F("h_jetE", "h_jetE", 50, 0, 1200);
   h.jetEta = new TH1F("h_jetEta", "h_jetEta", 50, -5, 5);
   h.jetPhi = new TH1F("h_jetPhi", "h_jetPhi", 20, 0, 3.14);
   // BJet
-  h.bjetN   = new TH1F("h_bjetN", "h_bjetN", 8, 0, 8);
+  h.bjetN   = new TH1F("h_bjetN", "h_bjetN", 8+1, -0.5, 8.5);
   h.bjetPt  = new TH1F("h_bjetPt", "h_bjetPt", 50, 0, 800);
   h.bjetE   = new TH1F("h_bjetE", "h_bjetE", 50, 0, 1000);
   h.bjetEta = new TH1F("h_bjetEta", "h_bjetEta", 50, -5, 5);
   h.bjetPhi = new TH1F("h_bjetPhi", "h_bjetPhi", 20, 0, 3.14);
   // Electron
-  h.electronN   = new TH1F("h_electronN", "h_electronN", 7, 0, 7);
+  h.electronN   = new TH1F("h_electronN", "h_electronN", 8+1, -0.5, 8.5);
   h.electronPt  = new TH1F("h_electronPt", "h_electronPt", 50, 0, 300);
   h.electronE   = new TH1F("h_electronE", "h_electronE", 50, 0, 300);
   h.electronEta = new TH1F("h_electronEta", "h_electronEta", 50, -3, 3);
   h.electronPhi = new TH1F("h_electronPhi", "h_electronPhi", 20, 0, 3.14);
   h.electronQ   = new TH1F("h_electronQ", "h_electronQ", 2, -1, 1);
   // Muon
-  h.muonN   = new TH1F("h_muonN", "h_muonN", 7, 0, 7);
+  h.muonN   = new TH1F("h_muonN", "h_muonN", 8+1, -0.5, 8.5);
   h.muonPt  = new TH1F("h_muonPt", "h_muonPt", 50, 0, 300);
   h.muonE   = new TH1F("h_muonE", "h_muonE", 50, 0, 300);
   h.muonEta = new TH1F("h_muonEta", "h_muonEta", 50, -3, 3);
@@ -113,6 +115,7 @@ EL::StatusCode TruthReader :: histInitialize ()
   h.met    = new TH1F("h_met", "h_met", 50, 0, 500);
   h.metPhi = new TH1F("h_metPhi", "h_metPhi", 20, 0, 3.14);
   h.numEvents = new TH1F("h_numEvents", "h_numEvents", 1, 0.5, 1.5);
+  h.bjetEmulN = new TH1F("h_bjetEmulN", "h_bjetEmulN", 8+1, -0.5, 8.5);
   h.jetFlavorMultiplicity = new TH2F("h_jetFlavorMultiplicity", "h_jetFlavorMultiplicity",
                                      30+1, -0.5, 30.0, // pdg
                                      20+1, -0.5, 20.0); // multiplicity
@@ -252,6 +255,20 @@ bool has_Z_candidate(const xAOD::TruthParticle* l0,
             is_Z_candidate(l1, l2) or
             is_Z_candidate(l0, l2) );
 }
+
+bool isb_emulated(const int &flavor)
+{
+    float efficiency = (flavor== 1 ?  1/440. : // d
+                        flavor== 2 ?  1/440. : // u
+                        flavor== 3 ?  1/440. : // s
+                        flavor== 4 ?  1/8.   : // c
+                        flavor== 5 ?  0.70   : // b
+                        flavor==15 ?  1/26.  : // tau
+                        flavor==21 ?  1/440. : // gluon (about right, modulo g->cc, g->bb splitting)
+                        0.0);                  // everything else
+    return (gRandom->Uniform(0.0, 1.0) < efficiency);
+}
+
 bool is_ee(const xAOD::TruthParticle* l0, const xAOD::TruthParticle* l1) { return isElectron(l0) and isElectron(l1); }
 bool is_em(const xAOD::TruthParticle* l0, const xAOD::TruthParticle* l1) { return ((isElectron(l0) and isMuon(l1)) or
                                                                                    (isMuon(l0) and isElectron(l1))); }
@@ -465,11 +482,14 @@ EL::StatusCode TruthReader :: execute ()
   }
 
   JftMultiplicity_t truthJetFlavorMultiplicity;
-  std::vector<xAOD::Jet*> v_bjet;
+  std::vector<xAOD::Jet*> v_bjet, v_bjet_emul;
+
   for(const auto jet : v_jet) {
       int flavor = abs( jet->auxdata<int>("PartonTruthLabelID"));
       if(flavor == 5)
           v_bjet.push_back(jet);
+      if(isb_emulated(flavor))
+          v_bjet_emul.push_back(jet);
       if(truthJetFlavorMultiplicity.find(flavor)!=truthJetFlavorMultiplicity.end())
           truthJetFlavorMultiplicity[flavor] += 1;
       else
@@ -482,6 +502,8 @@ EL::StatusCode TruthReader :: execute ()
   for(const auto j : v_jet) { if(j->pt()*mev2gev >25.0) v_jet25.push_back(j); }
   std::vector<xAOD::Jet*> v_bjet20;
   for(const auto j : v_bjet) { if(j->pt()*mev2gev >20.0) v_bjet20.push_back(j); }
+  std::vector<xAOD::Jet*> v_bjet20_emul;
+  for(const auto j : v_bjet_emul) { if(j->pt()*mev2gev >20.0) v_bjet20_emul.push_back(j); }
 
   double etmiss = (*met_it)->met() * mev2gev;
   double etmissPhi = (*met_it)->phi();
@@ -612,6 +634,7 @@ EL::StatusCode TruthReader :: execute ()
       void operator()(SelectionHistograms &h,
                       const std::vector<xAOD::Jet*> &jets,
                       const std::vector<xAOD::Jet*> &bjets,
+                      const std::vector<xAOD::Jet*> &bjetsEmulated,
                       const std::vector<xAOD::TruthParticle*> &electrons,
                       const std::vector<xAOD::TruthParticle*> &muons,
                       const JftMultiplicity_t &jftm,
@@ -628,6 +651,7 @@ EL::StatusCode TruthReader :: execute ()
       h.met->Fill(etmiss, weight );
       h.metPhi->Fill(etmissPhi, weight );
       h.meff->Fill(meff , weight);
+      h.bjetEmulN->Fill(bjetsEmulated.size(), weight);
       TH2* hjfm = static_cast<TH2*>(h.jetFlavorMultiplicity);
       for(const auto &fm : jftm)
           hjfm->Fill(fm.first, fm.second, weight);
@@ -636,35 +660,35 @@ EL::StatusCode TruthReader :: execute ()
   const JftMultiplicity_t &jftm = truthJetFlavorMultiplicity;
   if(true){
       fillHistos(m_inclusive_histos,
-                 v_jet, v_bjet, v_electron, v_muon, jftm, etmiss, etmissPhi, meff, eventWeight);
+                 v_jet, v_bjet, v_bjet_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff, eventWeight);
   }
   if(pass_sr3b){
       fillHistos(m_sr3b_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr1b){
       fillHistos(m_sr1b_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr0b5j){
       fillHistos(m_sr0b5j_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr0b3j){
       fillHistos(m_sr0b3j_histos,
-                 v_jet50, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
+                 v_jet50, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_cr1bExclttZ){
       fillHistos(m_cr1bttZ_histos,
-                 v_jet25, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
+                 v_jet25, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
   }
   if(pass_cr2bInclttZ){
       fillHistos(m_cr2bttZ_histos,
-                 v_jet25, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
+                 v_jet25, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
   }
   if(pass_cr2bInclttV){
       fillHistos(m_cr2bttV_histos,
-                 v_jet25, v_bjet20, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
+                 v_jet25, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_cr, eventWeight);
   }
 
   return EL::StatusCode::SUCCESS;
@@ -756,6 +780,11 @@ EL::StatusCode TruthReader :: histFinalize ()
   h.bjetPhi->GetXaxis()->SetTitle(" #phi_{b-jet} ");
   h.bjetPhi->SetMinimum(0.1);
   h.bjetPhi->SetLineColor( kBlue + 2);
+
+  // emulated BJet
+  h.bjetN->GetYaxis()->SetTitle(" # of events ");
+  h.bjetN->GetXaxis()->SetTitle(" Number of emulated b-jets");
+  h.bjetN->SetLineColor( kBlue + 2);
 
   // Electron
   h.electronN->GetYaxis()->SetTitle(" # of events ");
@@ -877,6 +906,7 @@ void TruthReader::SelectionHistograms::clone_with_suffix(TruthReader::SelectionH
     met            = with_suffix(input.met        );
     metPhi         = with_suffix(input.metPhi     );
     numEvents      = with_suffix(input.numEvents  );
+    bjetEmulN      = with_suffix(input.bjetEmulN  );
     jetFlavorMultiplicity = with_suffix(input.jetFlavorMultiplicity);
 
     add_histograms_to_output(worker);

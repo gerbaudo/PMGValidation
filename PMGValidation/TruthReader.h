@@ -44,6 +44,7 @@ private:
     TH1 *met;
     TH1 *metPhi;
     TH1 *numEvents;
+    TH1 *bjetEmulN; // emulated BJet
     TH1 *jetFlavorMultiplicity; // in fact a th2
     std::vector<TH1*> histograms() {
       return {
@@ -52,6 +53,7 @@ private:
           electronN, electronPt, electronE, electronEta, electronPhi, electronQ,
           muonN, muonPt, muonE, muonEta, muonPhi, muonQ,
           meff, met, metPhi, numEvents,
+          bjetEmulN,
           jetFlavorMultiplicity
           };
     }
