@@ -60,11 +60,13 @@ def main() :
     combiner.build_samples(process=process, systematic=systematic)
     histogram_names = ['h_meff', 'h_jetN',
                        # 'h_electronPt', 'h_muonPt',
-                       'h_meff_sr3b', 'h_jetN_sr3b',
-                       'h_meff_sr1b', 'h_jetN_sr1b',
-                       'h_meff_sr0b5j', 'h_jetN_sr0b5j',
-                       'h_meff_sr0b3j', 'h_jetN_sr0b3j',
-                       'h_meff_cr2bttV', 'h_jetN_cr2bttV',
+                       'h_jetFlavorMultiplicity',
+                       'h_bjetN',
+                       # 'h_meff_sr3b', 'h_jetN_sr3b',
+                       # 'h_meff_sr1b', 'h_jetN_sr1b',
+                       # 'h_meff_sr0b5j', 'h_jetN_sr0b5j',
+                       # 'h_meff_sr0b3j', 'h_jetN_sr0b3j',
+                       # 'h_meff_cr2bttV', 'h_jetN_cr2bttV',
                        ]
 
     combiner.compute_normalization_factors()
@@ -81,6 +83,10 @@ def main() :
         h_nom = histograms['nominal']
         h_up  = histograms['up']
         h_dn  = histograms['down']
+        if 'h_jetFlavorMultiplicity' in histogram_name:
+            h_nom = emulate_btag_multiplicity_from_truth_flavor(h_nom, 'nom')
+            h_up  = emulate_btag_multiplicity_from_truth_flavor(h_up, 'up')
+            h_dn  = emulate_btag_multiplicity_from_truth_flavor(h_dn, 'dn')
         histos = [h_nom, h_up, h_dn]
         for h in set(histos): # set: avoid rebinning twice when up==down
             h.Rebin(rebin_factor)
@@ -126,7 +132,8 @@ def main() :
                 return r, e
             else:
                 return 0.0, 0.0
-        if True:
+        print_normalization_summary = histogram_name.startswith('h_meff')
+        if print_normalization_summary:
             nom_int = h_nom.Integral()
             up_int = h_up.Integral()
             dn_int = h_dn.Integral()
@@ -215,6 +222,8 @@ def get_n_and_sumw_of_processed_events(input_filename='', histogram_name='h_numE
     if not input_file:
         raise IOError("missing %s"%input_filename)
     histo = input_file.Get(histogram_name)
+    if not histo:
+        print "missing %s from %s"%(histogram_name, input_filename)
     number_of_processed_events = histo.GetEntries()
     sumw_of_processed_events = histo.Integral()
     input_file.Close()
@@ -232,9 +241,13 @@ def get_histogram_names(input_filename=''):
 
 def merge(input_files=[], output_filename=''):
     "hadd a list of input files; return name merged file"
+    input_files = [f for f in input_files if f is not output_filename]
     cmd = "hadd %s %s" % (output_filename, ' '.join(input_files))
     out = utils.getCommandOutput(cmd)
     log.info(cmd)
+    if out['returncode']!=0:
+        log.info(out['stdout'])
+        log.error(out['stderr'])
     return output_filename if out['returncode']==0 else None
 
 def get_input_samples():
@@ -496,6 +509,42 @@ class HistogramCombiner:
             log.info("normalization factor for %s : %.3E"%(group, scale_factor))
         self.normalize_to_inclusive = True
 
+def emulate_btag_multiplicity_from_truth_flavor(h_multiplicity_vs_flavor=None, sys=''):
+    """
+    Take the multiplicity vs. PartonTruthLabelID histogram from
+    TruthReader.cxx and emulate the btag multiplicity.
+
+    Multiply the number of truth jets with each flavor by the expected
+    btag efficiency, and add them up to get an overall emulated b-tag
+    multiplicity.
+    """
+    parameters = [{'label':x[0], 'pdg':x[1], 'btag_eff':x[2]}
+                  for x in [('d',      1, 1/440.), # values from Ximo
+                            ('u',      2, 1/440.),
+                            ('s',      3, 1/440.),
+                            ('c',      4, 1/8.),
+                            ('b',      5, 0.70),
+                            ('tau',   15, 1/26.),
+                            ('t',      6, 0.0), # \todo not sure we need them: can they be assoc with a truth jet? check this
+                            ('e',     11, 0.0),
+                            ('nue',   12, 0.0),
+                            ('mu',    13, 0.0),
+                            ('numu',  14, 0.0),
+                            ('nutau', 16, 0.0),
+                            ('glu',   21, 0.0),
+                            ('gam',   22, 0.0),
+                            ]]
+    h_m_vf_f = h_multiplicity_vs_flavor
+    h_eff = h_m_vf_f.Clone(h_m_vf_f.GetName()+'_btag_eff_'+sys)
+    h_eff.Reset()
+    for flavor in range(1, 1+h_eff.GetXaxis().GetNbins()):
+        default_btag_eff = 0.0
+        btag_eff = next((x['btag_eff'] for x in parameters if x['pdg']==flavor), default_btag_eff)
+        for multiplicity in range(1, 1+h_eff.GetYaxis().GetNbins()):
+            h_eff.SetBinContent(flavor, multiplicity, btag_eff)
+    h_eff.Multiply(h_m_vf_f)
+    h_btag_multiplicity = h_eff.ProjectionY(h_eff.GetName()+'_btag_emulated_multiplicity')
+    return h_btag_multiplicity
 
 if __name__=='__main__':
     main()
