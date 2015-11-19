@@ -1,10 +1,16 @@
 #!/bin/env python
 
-# plot a comparison of the central/up/down variations
-
+description="""
+plot a comparison of the central/up/down variations
+"""
+epilog="""
+Example:
+ ./PMGValidation/python/plotExplicitSamples.py -p ttll -s sherpa 2>&1 | tee out/ttll_sherpa.log
+"""
 # davide.gerbaudo@gmail.com
 # Oct 2015
 
+import argparse
 import glob
 import logging as log
 import os
@@ -18,39 +24,42 @@ style.SetOptTitle(1)
 
 def main():
     ""
-    set_log()
-    outdir = './'
-    do_scale = True # False
-    do_alps = not do_scale
-    # file_label = 'ttWnp0_scale_sys'
-    # plot_label = 'ttWnp0 scale sys'
-    file_label = 'ttW_scale_sys' if do_scale else 'ttW_alps_sys'
-    plot_label = 'ttW scale sys' if do_scale else 'ttW alps sys'
+
+def main() :
+    parser = argparse.ArgumentParser(description=description,
+                                     epilog=epilog,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    add_arg = parser.add_argument
+    add_arg('-o', '--output-dir', default="./")
+    add_arg('-p', '--process', help='one physics process, eg. ttw')
+    add_arg('-s', '--systematic', help='one of the systematic variations')
+    add_arg('-v', '--verbose', action='store_true')
+    add_arg('-d', '--debug', action='store_true')
+    args = parser.parse_args()
+
+    set_log(args.verbose, args.debug)
+    outdir = args.output_dir
+    process = args.process
+    systematic = args.systematic
+
+    available_processes = get_input_samples().keys()
+    if process not in available_processes:
+        raise StandardError("invalid process %s, should be one of %s"%(process, str(available_processes)))
+    available_systematics = get_input_samples()[process].keys()
+    if systematic not in available_systematics:
+        raise StandardError("invalid systematic %s, should be one of %s"%(systematic, str(available_systematics)))
+
+    file_label = process+'_sys_'+systematic
+    plot_label = process+' sys. '+systematic
+
     normalize_to_unity = False # True
     luminosity = 1.0
 
     combiner = HistogramCombiner()
-    combiner.build_samples(group='ttW_sysWgt', selected_samples=['ttWnp0_sysWgt', 'ttWnp1_sysWgt', 'ttWnp2_sysWgt'])
-    if do_scale:
-        combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp', 'ttWnp1_scalUp', 'ttWnp2_scalUp'])
-        combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn', 'ttWnp1_scalDn', 'ttWnp2_scalDn'])
-    else:
-        combiner.build_samples(group='ttW_alpsUp', selected_samples=['ttWnp0_alpsUp', 'ttWnp1_alpsUp', 'ttWnp2_alpsUp'])
-        combiner.build_samples(group='ttW_alpsDn', selected_samples=['ttWnp0_alpsDn', 'ttWnp1_alpsDn', 'ttWnp2_alpsDn'])
-    # combiner.build_samples(group='ttW_sysWgt', selected_samples=['ttWnp0_sysWgt'                                  ])
-    # combiner.build_samples(group='ttW_scalUp', selected_samples=['ttWnp0_scalUp'                                  ])
-    # combiner.build_samples(group='ttW_scalDn', selected_samples=['ttWnp0_scalDn'                                  ])
-    # combiner.build_samples(group='ttW_sysWgt', selected_samples=[                 'ttWnp1_sysWgt'                 ])
-    # combiner.build_samples(group='ttW_scalUp', selected_samples=[                 'ttWnp1_scalUp'                 ])
-    # combiner.build_samples(group='ttW_scalDn', selected_samples=[                 'ttWnp1_scalDn'                 ])
-    # combiner.build_samples(group='ttW_sysWgt', selected_samples=[                                  'ttWnp2_sysWgt'])
-    # combiner.build_samples(group='ttW_scalUp', selected_samples=[                                  'ttWnp2_scalUp'])
-    # combiner.build_samples(group='ttW_scalDn', selected_samples=[                                  'ttWnp2_scalDn'])
 
-    # histogram_names = get_histogram_names(input_nom) # todo : get histonames from first file
-    # exclude_histograms = ['EventLoop_EventCount']
-    # histogram_names = [h for h in histogram_names if h not in exclude_histograms]
+    combiner.build_samples(process=process, systematic=systematic)
     histogram_names = ['h_meff', 'h_jetN',
+                       # 'h_electronPt', 'h_muonPt',
                        'h_meff_sr3b', 'h_jetN_sr3b',
                        'h_meff_sr1b', 'h_jetN_sr1b',
                        'h_meff_sr0b5j', 'h_jetN_sr0b5j',
@@ -61,19 +70,19 @@ def main():
     combiner.compute_normalization_factors()
     output_pdf_name = outdir+'/'+file_label+'.pdf'
     c_summary = R.TCanvas('c_summary', 'plotExplicitSamples sampes summary ')
-    combiner.print_sample_summary_to_pdf(c_summary)
+    combiner.print_sample_summary_to_pdf(c_summary, label="%s: nominal vs. %s systematic"%(process, systematic))
     c_summary.SaveAs(output_pdf_name+'(')
 
 
     for histogram_name in histogram_names:
-        rebin = 'meff' in histogram_name and '_sr' in histogram_name # non-inclusive histos: low stats
-        rebin_factor = (5 if 'meff' in histogram_name else 2 if 'jetN' in histogram_name else 1) if rebin else 1
+        rebin = 'meff' in histogram_name # and '_sr' in histogram_name # non-inclusive histos: low stats
+        rebin_factor = (2 if 'meff' in histogram_name else 2 if 'jetN' in histogram_name else 1) if rebin else 1
         histograms = combiner.get_histograms(histogram_name=histogram_name)
-        h_nom = histograms['ttW_sysWgt']
-        h_up  = histograms['ttW_scalUp' if do_scale else 'ttW_alpsUp']
-        h_dn  = histograms['ttW_scalDn' if do_scale else 'ttW_alpsDn']
+        h_nom = histograms['nominal']
+        h_up  = histograms['up']
+        h_dn  = histograms['down']
         histos = [h_nom, h_up, h_dn]
-        for h in histos:
+        for h in set(histos): # set: avoid rebinning twice when up==down
             h.Rebin(rebin_factor)
         h_nom.SetLineWidth(2*h_nom.GetLineWidth())
         h_up.SetLineColor(R.kBlue)
@@ -111,9 +120,12 @@ def main():
         def ratio_and_error(ave=(1.0, 0.01), bve=(2.0, 0.001)):
             a, sa = ave
             b, sb = bve
-            r = a/b
-            e = r * sqrt((sa/a)*(sa/a)+(sb/b)*(sb/b))
-            return r, e
+            if a and b:
+                r = a/b
+                e = r * sqrt((sa/a)*(sa/a)+(sb/b)*(sb/b))
+                return r, e
+            else:
+                return 0.0, 0.0
         if True:
             nom_int = h_nom.Integral()
             up_int = h_up.Integral()
@@ -123,16 +135,19 @@ def main():
             dn_int, dn_err = integral_and_error(h_dn)
             rup, rupe = ratio_and_error((up_int, up_err), (nom_int, nom_err))
             rdn, rdne = ratio_and_error((dn_int, dn_err), (nom_int, nom_err))
-            print ("normalization change: "
-                   +"{} up {:.1%} down {:.1%} (nom {:.1f}, up {:.1f}, do {:.1f})".format(h_nom.GetName(),
-                                                                                      1.0-up_int/nom_int,
-                                                                                      1.0-dn_int/nom_int,
-                                                                                      nom_int,
-                                                                                      up_int,
-                                                                                      dn_int))
+            # print ("normalization change: "
+            #        +"{} up {:.1%} down {:.1%} (nom {:.1f}, up {:.1f}, do {:.1f})".format(h_nom.GetName(),
+            #                                                                           1.0-up_int/nom_int if nom_int else 1.0,
+            #                                                                           1.0-dn_int/nom_int if nom_int else 1.0,
+            #                                                                           nom_int,
+            #                                                                           up_int,
+            #                                                                           dn_int))
             print ("normalization change: "
                    +"{} up {:.1%} +/- {:.1%} down {:.1%} +/- {:.1%} ".format(h_nom.GetName(), 1.0-rup, rupe, 1.0-rdn, rdne)
-                   +"(nom {:.2E}  +/- {:.2E}, up {:.2E} +/- {:.2E}, do {:.2E}) +/- {:.2E}".format(nom_int, nom_err, up_int, up_err, dn_int, dn_err))
+                   +"(integral: "
+                   +"nom {:.2E}  +/- {:.2E}, up {:.2E} +/- {:.2E}, do {:.2E} +/- {:.2E})".format(nom_int, nom_err,
+                                                                                                 up_int, up_err,
+                                                                                                 dn_int, dn_err))
 
             def bc(h): return [h.GetBinContent(i) for i in range(1,1+h.GetNbinsX())]
             def max_frac_variation(h1, h2):
@@ -149,10 +164,10 @@ def main():
                 m2 = max(bc2)
                 return max([abs(b2/b1) for b1, b2 in zip(bc1, bc2) if b1>0.1*m1 and b2>0.1*m2])
 
-            print ("shape change: "
-                   +"{} up {:.1%} down {:.1%} ".format(h_nom.GetName(),
-                                                       1.0-max_frac_variation_within10(h_up, h_nom),
-                                                       1.0-max_frac_variation_within10(h_dn, h_nom)))
+            # print ("shape change: "
+            #        +"{} up {:.1%} down {:.1%} ".format(h_nom.GetName(),
+            #                                            1.0-max_frac_variation_within10(h_up, h_nom),
+            #                                            1.0-max_frac_variation_within10(h_dn, h_nom)))
 
         topPad.Update()
         # bottom
@@ -223,56 +238,116 @@ def merge(input_files=[], output_filename=''):
     return output_filename if out['returncode']==0 else None
 
 def get_input_samples():
-    "xsecs from Josh"
+    """
+    dict with the input samples (files+xsec).
+    each process has nominal + systematics; each systematic has up and down.
+    nominal, up, and down have one or more subprocess, each with a xsec and some input files
+    """
     base='out/batch_10k/' # lxplus:work/public/samesign_jets/ttVsystematics/make_plots
     base='batch/out/' # uclhc-1:ss3l/ttVsystematics/make_plots
     base_nom='batch/2015-11-03/out/' # uclhc-1 take2
     base='batch/2015-11-05/out/' # uclhc-1 take3 (new samples from Josh)
-    base_wwjj='batch/2015-11-16/out/'
-    return {
-        # ttW nominal
-        'ttWnp0_sysWgt' : { 'input_files' : base_nom+'ttW_410066/hist-ttW_*.root', 'xsec' : 0.176560 },
-        'ttWnp1_sysWgt' : { 'input_files' : base_nom+'ttW_410067/hist-ttW_*.root', 'xsec' : 0.140620 },
-        'ttWnp2_sysWgt' : { 'input_files' : base_nom+'ttW_410068/hist-ttW_*.root', 'xsec' : 0.136800 },
-        # ttW scalUp
-        'ttWnp0_scalUp' : { 'input_files' : base+'ttW_610066/hist-ttW_*.root', 'xsec' : 0.1437 },
-        'ttWnp1_scalUp' : { 'input_files' : base+'ttW_610067/hist-ttW_*.root', 'xsec' : 0.11086 },
-        'ttWnp2_scalUp' : { 'input_files' : base+'ttW_610068/hist-ttW_*.root', 'xsec' : 0.099048 },
-        # ttW scalDn
-        'ttWnp0_scalDn' : { 'input_files' : base+'ttW_710066/hist-ttW_*.root', 'xsec' : 0.24284 },
-        'ttWnp1_scalDn' : { 'input_files' : base+'ttW_710067/hist-ttW_*.root', 'xsec' : 0.20288 },
-        'ttWnp2_scalDn' : { 'input_files' : base+'ttW_710068/hist-ttW_*.root', 'xsec' : 0.21626 },
-        # ttW alpsUp
-        'ttWnp0_alpsUp' : { 'input_files' : base+'ttW_810066/hist-ttW_*.root', 'xsec' : 0.1838 },
-        'ttWnp1_alpsUp' : { 'input_files' : base+'ttW_810067/hist-ttW_*.root', 'xsec' : 0.1446 },
-        'ttWnp2_alpsUp' : { 'input_files' : base+'ttW_810068/hist-ttW_*.root', 'xsec' : 0.13922 },
-        # ttW alpsDn
-        'ttWnp0_alpsDn' : { 'input_files' : base+'ttW_910066/hist-ttW_*.root', 'xsec' : 0.18134 },
-        'ttWnp1_alpsDn' : { 'input_files' : base+'ttW_910067/hist-ttW_*.root', 'xsec' : 0.14484 },
-        'ttWnp2_alpsDn' : { 'input_files' : base+'ttW_910068/hist-ttW_*.root', 'xsec' : 0.1379 },
-        # wwjj, with xsec from AMI
-        'wwjj_nom'      : { 'input_files' : base_wwjj+'WWjj_361070/*.root', 'xsec' : 0.043004 },
-        'wwjj_FSFup'    : { 'input_files' : base_wwjj+'WWjj_361643/*.root', 'xsec' : 0.025199 },
-        'wwjj_QSFdown'  : { 'input_files' : base_wwjj+'WWjj_361644/*.root', 'xsec' : 0.026935 },
-        'wwjj_QSFup'    : { 'input_files' : base_wwjj+'WWjj_361645/*.root', 'xsec' : 0.025422 },
-        'wwjj_RSFdown'  : { 'input_files' : base_wwjj+'WWjj_361646/*.root', 'xsec' : 0.033690 },
-        'wwjj_RSFup'    : { 'input_files' : base_wwjj+'WWjj_361647/*.root', 'xsec' : 0.021188 },
-        'wwjj_CKKWdown' : { 'input_files' : base_wwjj+'WWjj_361648/*.root', 'xsec' : 0.043657 },
-        'wwjj_CKKWup'   : { 'input_files' : base_wwjj+'WWjj_361649/*.root', 'xsec' : 0.042895 },
-        'wwjj_FSFdown'  : { 'input_files' : base_wwjj+'WWjj_361650/*.root', 'xsec' : 0.044477 },
-        'wwjj_FSFup'    : { 'input_files' : base_wwjj+'WWjj_361651/*.root', 'xsec' : 0.042077 },
-        'wwjj_QSFdown'  : { 'input_files' : base_wwjj+'WWjj_361652/*.root', 'xsec' : 0.043747 },
-        'wwjj_QSFup'    : { 'input_files' : base_wwjj+'WWjj_361653/*.root', 'xsec' : 0.043590 },
-        'wwjj_RSFdown'  : { 'input_files' : base_wwjj+'WWjj_361654/*.root', 'xsec' : 0.043010 },
-        'wwjj_RSFup'    : { 'input_files' : base_wwjj+'WWjj_361655/*.root', 'xsec' : 0.043495 },
-        'wwjj_CKKWdown' : { 'input_files' : base_wwjj+'WWjj_361656/*.root', 'xsec' : 0.026241 },
-        'wwjj_CKKWup'   : { 'input_files' : base_wwjj+'WWjj_361657/*.root', 'xsec' : 0.024757 },
-        'wwjj_FSFdown'  : { 'input_files' : base_wwjj+'WWjj_361658/*.root', 'xsec' : 0.027240 },
+    ttw = {
+        'nominal' : {
+            'ttWnp0_sysWgt' : { 'input_files' : base_nom+'ttW_410066/hist-ttW_*.root', 'xsec' : 0.176560 },
+            'ttWnp1_sysWgt' : { 'input_files' : base_nom+'ttW_410067/hist-ttW_*.root', 'xsec' : 0.140620 },
+            'ttWnp2_sysWgt' : { 'input_files' : base_nom+'ttW_410068/hist-ttW_*.root', 'xsec' : 0.136800 },
+            },
+        'scale' : {
+            'up' : {
+                'ttWnp0_scalUp' : { 'input_files' : base+'ttW_610066/hist-ttW_*.root', 'xsec' : 0.1437 },
+                'ttWnp1_scalUp' : { 'input_files' : base+'ttW_610067/hist-ttW_*.root', 'xsec' : 0.11086 },
+                'ttWnp2_scalUp' : { 'input_files' : base+'ttW_610068/hist-ttW_*.root', 'xsec' : 0.099048 },
+                },
+            'down' : {
+                'ttWnp0_scalDn' : { 'input_files' : base+'ttW_710066/hist-ttW_*.root', 'xsec' : 0.24284 },
+                'ttWnp1_scalDn' : { 'input_files' : base+'ttW_710067/hist-ttW_*.root', 'xsec' : 0.20288 },
+                'ttWnp2_scalDn' : { 'input_files' : base+'ttW_710068/hist-ttW_*.root', 'xsec' : 0.21626 },
+                },
+            },
+        'alpsfact' : {
+            'up' : {
+                'ttWnp0_alpsUp' : { 'input_files' : base+'ttW_810066/hist-ttW_*.root', 'xsec' : 0.1838 },
+                'ttWnp1_alpsUp' : { 'input_files' : base+'ttW_810067/hist-ttW_*.root', 'xsec' : 0.1446 },
+                'ttWnp2_alpsUp' : { 'input_files' : base+'ttW_810068/hist-ttW_*.root', 'xsec' : 0.13922 },
+                },
+            'down' : {
+                'ttWnp0_alpsDn' : { 'input_files' : base+'ttW_910066/hist-ttW_*.root', 'xsec' : 0.18134 },
+                'ttWnp1_alpsDn' : { 'input_files' : base+'ttW_910067/hist-ttW_*.root', 'xsec' : 0.14484 },
+                'ttWnp2_alpsDn' : { 'input_files' : base+'ttW_910068/hist-ttW_*.root', 'xsec' : 0.1379 },
+                },
+            },
         }
+    base_wwjj='batch/2015-11-16/out/'
+    wwjj = { # wwjj, with xsec from AMI
+        'nominal' : {
+            'wwjj_EW4_nom'      : { 'input_files' : base_wwjj+'WWjj_361069/*.root', 'xsec' : 0.043004 },
+            'wwjj_EW6_nom'      : { 'input_files' : base_wwjj+'WWjj_361070/*.root', 'xsec' : 0.043004 },
+            },
+        'FSF' : {
+            'up' : {
+                'wwjj_EW4_FSFup'    : { 'input_files' : base_wwjj+'WWjj_361643/*.root', 'xsec' : 0.025199 },
+                'wwjj_EW6_FSFup'    : { 'input_files' : base_wwjj+'WWjj_361651/*.root', 'xsec' : 0.042077 },
+                },
+            'down' : {
+                'wwjj_EW4_FSFdown'  : { 'input_files' : base_wwjj+'WWjj_361658/*.root', 'xsec' : 0.027240 },
+                'wwjj_EW6_FSFdown'  : { 'input_files' : base_wwjj+'WWjj_361650/*.root', 'xsec' : 0.044477 },
+                },
+            },
+        'QSF' : {
+            'up' : {
+                'wwjj_EW4_QSFup'    : { 'input_files' : base_wwjj+'WWjj_361645/*.root', 'xsec' : 0.025422 },
+                'wwjj_EW6_QSFup'    : { 'input_files' : base_wwjj+'WWjj_361653/*.root', 'xsec' : 0.043590 },
+            },
+            'down' : {
+                'wwjj_EW4_QSFdown'  : { 'input_files' : base_wwjj+'WWjj_361644/*.root', 'xsec' : 0.026935 },
+                'wwjj_EW6_QSFdown'  : { 'input_files' : base_wwjj+'WWjj_361652/*.root', 'xsec' : 0.043747 },
+                },
+            },
+        'RSF' : {
+            'up' : {
+                'wwjj_EW4_RSFup'    : { 'input_files' : base_wwjj+'WWjj_361647/*.root', 'xsec' : 0.021188 },
+                'wwjj_EW6_RSFup'    : { 'input_files' : base_wwjj+'WWjj_361655/*.root', 'xsec' : 0.043495 },
+                },
+            'down' : {
+                'wwjj_EW4_RSFdown'  : { 'input_files' : base_wwjj+'WWjj_361646/*.root', 'xsec' : 0.033690 },
+                'wwjj_EW6_RSFdown'  : { 'input_files' : base_wwjj+'WWjj_361654/*.root', 'xsec' : 0.043010 },
+                },
+            },
+        'CKKW' : {
+            'up' : {
+            'wwjj_EW6_CKKWup'   : { 'input_files' : base_wwjj+'WWjj_361649/*.root', 'xsec' : 0.042895 },
+            'wwjj_EW4_CKKWup'   : { 'input_files' : base_wwjj+'WWjj_361657/*.root', 'xsec' : 0.024757 },
+            },
+            'down' : {
+                'wwjj_EW6_CKKWdown' : { 'input_files' : base_wwjj+'WWjj_361648/*.root', 'xsec' : 0.043657 },
+                'wwjj_EW4_CKKWdown' : { 'input_files' : base_wwjj+'WWjj_361656/*.root', 'xsec' : 0.026241 },
+                },
+            },
+        }
+    base_ttll = 'batch/2015-11-17/out/'
+    ttll = {
+        'nominal' : { # official samples, xsec from AMI
+            'ttee_Np0'     : { 'input_files' : base_ttll+'ttll_410111/*.root', 'xsec' : 0.0088155 },
+            'ttee_Np1'     : { 'input_files' : base_ttll+'ttll_410112/*.root', 'xsec' : 0.0143800 },
+            'ttmumu_Np0'   : { 'input_files' : base_ttll+'ttll_410113/*.root', 'xsec' : 0.0088422 },
+            'ttmumu_Np1'   : { 'input_files' : base_ttll+'ttll_410114/*.root', 'xsec' : 0.0143750 },
+            'tttautau_Np0' : { 'input_files' : base_ttll+'ttll_410115/*.root', 'xsec' : 0.0090148 },
+            'tttautau_Np1' : { 'input_files' : base_ttll+'ttll_410116/*.root', 'xsec' : 0.0146360 },
+            },
+        'sherpa' : { # from Rohin, xsec from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/TtbarBoson
+            'up' : {
+                'ttll_0'       : { 'input_files' : base_ttll+'ttll_0/*.root', 'xsec' : 0.0975300 },
+                },
+            }
+        }
+    ttll['sherpa']['down'] = ttll['sherpa']['up']
+    return {'ttw':ttw, 'ttll':ttll, 'wwjj':wwjj}
 
-def set_log():
-    verbose = True
+def set_log(verbose, debug):
     if verbose:
+        log.basicConfig(format="%(levelname)s: %(message)s", level=log.INFO)
+    elif debug:
         log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
     else:
         log.basicConfig(format="%(levelname)s: %(message)s")
@@ -282,7 +357,7 @@ def set_log():
 
 class HistogramCombiner:
     """
-    Combine histograms from different processes with different cross sections
+    Combine histograms from different sub-processes with different cross sections
     Avoid opening files multiple times.
     """
     class Sample:
@@ -356,11 +431,18 @@ class HistogramCombiner:
         self.normalize_to_unity = False
         self.normalize_to_inclusive = False
 
-    def build_samples(self, selected_samples=[], group=''):
-        samples = get_input_samples()
+    def build_samples(self, process='ttw', systematic='sherpa'):
         Sample = HistogramCombiner.Sample
-        self.groups[group] = [Sample(name=k, input_files_wildcard=e['input_files'], xsec=e['xsec'])
-                             for k, e in samples.iteritems() if k in selected_samples]
+        samples_nom = get_input_samples()[process]['nominal']
+        samples_up = get_input_samples()[process][systematic]['up']
+        samples_dn = get_input_samples()[process][systematic]['down']
+        self.groups['nominal'] = [Sample(name=k, input_files_wildcard=e['input_files'], xsec=e['xsec'])
+                                  for k, e in samples_nom.iteritems()]
+        self.groups['up'] = [Sample(name=k, input_files_wildcard=e['input_files'], xsec=e['xsec'])
+                             for k, e in samples_up.iteritems()]
+        self.groups['down'] = [Sample(name=k, input_files_wildcard=e['input_files'], xsec=e['xsec'])
+                               for k, e in samples_dn.iteritems()]
+
     def get_histograms(self, histogram_name='', groups=[]):
         "provide, for each group, a histogram from the sum of the samples in the group"
         groups = groups if groups else self.groups.keys()
@@ -368,6 +450,8 @@ class HistogramCombiner:
         for group in groups:
             samples = self.groups[group]
             histograms = [s.get_histogram(histogram_name) for s in samples]
+            if not histograms:
+                raise StandardError("missing %s from %s"%(histogram_name, str(groups)))
             h_tot = histograms[0].Clone(histograms[0].GetName()+'_tot')
             for h in histograms[1:]:
                 h_tot.Add(h)
@@ -379,14 +463,17 @@ class HistogramCombiner:
                 h_tot.Scale(self.inclusive_normalization_scale[group])
         return tot_histograms
 
-    def print_sample_summary_to_pdf(self, canvas):
+    def print_sample_summary_to_pdf(self, canvas, label=''):
         canvas.cd()
         text = R.TText()
         text.SetNDC()
         text.SetTextFont(102)
         text.SetTextSize(0.375*text.GetTextSize())
         lines = []
-        for group, samples in self.groups.items():
+        if label:
+            lines.append(label)
+        for group in ['nominal', 'up', 'down']:
+            samples = self.groups[group]
             lines.append(group)
             for s in samples:
                 lines.append(s.summary())
@@ -410,6 +497,7 @@ class HistogramCombiner:
             self.inclusive_normalization_scale[group] = scale_factor
             log.info("normalization factor for %s : %.3E"%(group, scale_factor))
         self.normalize_to_inclusive = True
+
 
 if __name__=='__main__':
     main()
