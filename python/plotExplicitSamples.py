@@ -243,10 +243,8 @@ def get_input_samples():
     each process has nominal + systematics; each systematic has up and down.
     nominal, up, and down have one or more subprocess, each with a xsec and some input files
     """
-    base='out/batch_10k/' # lxplus:work/public/samesign_jets/ttVsystematics/make_plots
-    base='batch/out/' # uclhc-1:ss3l/ttVsystematics/make_plots
-    base_nom='batch/2015-11-03/out/' # uclhc-1 take2
-    base='batch/2015-11-05/out/' # uclhc-1 take3 (new samples from Josh)
+    base = 'batch/2015-11-18/out/'
+    base_nom = base
     ttw = {
         'nominal' : {
             'ttWnp0_sysWgt' : { 'input_files' : base_nom+'ttW_410066/hist-ttW_*.root', 'xsec' : 0.176560 },
@@ -278,7 +276,7 @@ def get_input_samples():
                 },
             },
         }
-    base_wwjj='batch/2015-11-16/out/'
+    base_wwjj = base
     wwjj = { # wwjj, with xsec from AMI
         'nominal' : {
             'wwjj_EW4_nom'      : { 'input_files' : base_wwjj+'WWjj_361069/*.root', 'xsec' : 0.043004 },
@@ -325,7 +323,7 @@ def get_input_samples():
                 },
             },
         }
-    base_ttll = 'batch/2015-11-17/out/'
+    base_ttll = base
     ttll = {
         'nominal' : { # official samples, xsec from AMI
             'ttee_Np0'     : { 'input_files' : base_ttll+'ttll_410111/*.root', 'xsec' : 0.0088155 },
@@ -337,7 +335,7 @@ def get_input_samples():
             },
         'sherpa' : { # from Rohin, xsec from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/TtbarBoson
             'up' : {
-                'ttll_0'       : { 'input_files' : base_ttll+'ttll_0/*.root', 'xsec' : 0.0975300 },
+                'ttll_6'       : { 'input_files' : base_ttll+'ttll_6/*.root', 'xsec' : 0.0975300 },
                 },
             }
         }
