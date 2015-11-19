@@ -288,7 +288,14 @@ def get_input_samples():
                 'ttWnp2_alpsDn' : { 'input_files' : base+'ttW_910068/hist-ttW_*.root', 'xsec' : 0.1379 },
                 },
             },
+        'sherpa' : {
+            'up' : {
+                'ttw_15' : { 'input_files' : base+'ttW_15/hist-ttW_*.root', 'xsec' : 0.577 },
+                },
+            },
         }
+    ttw['sherpa']['down'] = ttw['sherpa']['up']
+
     base_wwjj = base
     wwjj = { # wwjj, with xsec from AMI
         'nominal' : {
