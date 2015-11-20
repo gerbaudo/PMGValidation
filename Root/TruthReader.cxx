@@ -511,7 +511,7 @@ EL::StatusCode TruthReader :: execute ()
   double meff_ss = etmiss + sumPt(v_jet50) + sumPt(v_electron) + sumPt(v_muon);
   double meff_cr = etmiss + sumPt(v_jet25) + sumPt(v_electron) + sumPt(v_muon);
   size_t num_ss_leptons = count_samesign_leptons(v_electron, v_muon);
-  size_t num_jet20_b = v_bjet20.size();
+  size_t num_jet20_b = v_bjet20_emul.size(); // v_bjet20.size();
   size_t num_jet25 = v_jet25.size();
   size_t num_jet50 = v_jet50.size();
   bool el_eta137 = all_of(v_electron.begin(), v_electron.end(),
