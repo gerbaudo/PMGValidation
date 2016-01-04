@@ -69,17 +69,19 @@ def topLeftLegend(pad,  legWidth, legHeight, shift=0.0) :
     leg.SetBorderSize(1)
     leg.SetFillColor(0)
     leg.SetFillStyle(0)
+    leg.SetTextFont(r.gStyle.GetLabelFont())
     pad._leg = leg
     return leg
-def topRightLegend(pad,  legWidth, legHeight, shift=0.0) :
+def topRightLegend(pad,  legWidth, legHeight, hShift=0.0, vShift=0.0) :
     rMarg, lMarg, tMarg = pad.GetRightMargin(), pad.GetLeftMargin(), pad.GetTopMargin()
-    leg = r.TLegend(1.0 - rMarg - legWidth + shift,
-                    1.0 - tMarg - legHeight + shift,
-                    1.0 - rMarg + shift,
-                    1.0 - tMarg + shift)
+    leg = r.TLegend(1.0 - rMarg + hShift - legWidth,
+                    1.0 - tMarg + vShift - legHeight,
+                    1.0 - rMarg + hShift,
+                    1.0 - tMarg + vShift)
     leg.SetBorderSize(1)
     leg.SetFillColor(0)
     leg.SetFillStyle(0)
+    leg.SetTextFont(r.gStyle.GetLabelFont())
     pad._leg = leg
     return leg
 def rightLegend(pad) :
@@ -219,6 +221,7 @@ def topRightLabel(pad, label, xpos=None, ypos=None, align=33, scale=1.0) :
     tex.SetNDC()
     tex.SetTextAlign(align)
     tex.SetTextSize(scale*tex.GetTextSize())
+    tex.SetTextFont(r.gStyle.GetTitleFont())
     tex.DrawLatex((1.0-pad.GetRightMargin()) if not xpos else xpos, (1.0-pad.GetTopMargin()) if not ypos else ypos, label)
     pad._label = tex
     return tex
