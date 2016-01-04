@@ -60,13 +60,16 @@ def main() :
     combiner.build_samples(process=process, systematic=systematic)
     histogram_names = ['h_meff', 'h_jetN',
                        # 'h_electronPt', 'h_muonPt',
-                       'h_jetFlavorMultiplicity',
-                       'h_bjetN',
-                       # 'h_meff_sr3b', 'h_jetN_sr3b',
-                       # 'h_meff_sr1b', 'h_jetN_sr1b',
-                       # 'h_meff_sr0b5j', 'h_jetN_sr0b5j',
-                       # 'h_meff_sr0b3j', 'h_jetN_sr0b3j',
-                       # 'h_meff_cr2bttV', 'h_jetN_cr2bttV',
+                       # 'h_bjetEmulN', 'h_bjetN',
+                       # 'h_bjetEmulN_sr3b', 'h_bjetN_sr3b',
+                       # 'h_bjetEmulN_sr1b', 'h_bjetN_sr1b',
+                       # 'h_bjetEmulN_cr2bttV', 'h_bjetN_cr2bttV',
+                       # 'h_meff_sr3b',    'h_jetN_sr3b',    'h_met_sr3b',
+                       # 'h_meff_sr1b',    'h_jetN_sr1b',    'h_met_sr1b',
+                       # 'h_meff_sr0b5j',  'h_jetN_sr0b5j',  'h_met_sr0b5j',
+                       # 'h_meff_sr0b4j',  'h_jetN_sr0b4j',  'h_met_sr0b4j',
+                       # 'h_meff_sr0b3j',  'h_jetN_sr0b3j',  'h_met_sr0b3j',
+                       # 'h_meff_cr2bttV', 'h_jetN_cr2bttV', 'h_met_cr2bttV'
                        ]
 
     combiner.compute_normalization_factors()
@@ -154,7 +157,11 @@ def main() :
                    +"(integral: "
                    +"nom {:.2E}  +/- {:.2E}, up {:.2E} +/- {:.2E}, do {:.2E} +/- {:.2E})".format(nom_int, nom_err,
                                                                                                  up_int, up_err,
-                                                                                                 dn_int, dn_err))
+                                                                                                 dn_int, dn_err)
+                   +" (entries nom {:.2E} up {:.2E} do {:.2E}".format(h_nom.GetEntries(), h_up.GetEntries(), h_dn.GetEntries()))
+            print ("tex normalization change: "
+                   +"{} up ${:.1%} \pm {:.1%}$ down ${:.1%} \pm {:.1%}$ ".format(h_nom.GetName(), 1.0-rup, rupe, 1.0-rdn, rdne)
+                   )
 
             def bc(h): return [h.GetBinContent(i) for i in range(1,1+h.GetNbinsX())]
             def max_frac_variation(h1, h2):
@@ -256,7 +263,7 @@ def get_input_samples():
     each process has nominal + systematics; each systematic has up and down.
     nominal, up, and down have one or more subprocess, each with a xsec and some input files
     """
-    base = 'batch/2015-11-18/out/'
+    base = 'batch/2015-11-20/out/'
     base_nom = base
     ttw = {
         'nominal' : {
@@ -296,7 +303,8 @@ def get_input_samples():
         }
     ttw['sherpa']['down'] = ttw['sherpa']['up']
 
-    base_wwjj = base
+    # base_wwjj = base
+    base_wwjj = 'batch/2015-11-23/out/'
     wwjj = { # wwjj, with xsec from AMI
         'nominal' : {
             'wwjj_EW4_nom'      : { 'input_files' : base_wwjj+'WWjj_361069/*.root', 'xsec' : 0.043004 },
