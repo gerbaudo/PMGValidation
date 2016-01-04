@@ -20,7 +20,9 @@ from math import sqrt
 import rootUtils as ru
 R = ru.importRoot()
 style = ru.getAtlasStyle()
-style.SetOptTitle(1)
+# style.SetOptTitle(1)
+R.gROOT.SetStyle(style.GetName())
+R.gROOT.ForceStyle()
 
 def main():
     ""
@@ -94,6 +96,7 @@ def main() :
         for h in set(histos): # set: avoid rebinning twice when up==down
             h.Rebin(rebin_factor)
         h_nom.SetLineWidth(2*h_nom.GetLineWidth())
+        h_nom.SetLineColor(R.kBlack)
         h_up.SetLineColor(R.kBlue)
         h_dn.SetLineColor(R.kRed)
 
@@ -101,25 +104,34 @@ def main() :
         pad_master.SetMaximum(1.1*max([h.GetMaximum() for h in histos]))
         pad_master.SetMinimum(1.0*min([0.0]+[h.GetMinimum() for h in histos]))
         pad_master.SetStats(0)
-        can = R.TCanvas('c_ttV_syst_'+histogram_name, 'ttV explicit variations '+pad_master.GetTitle())
+        can = R.TCanvas('c_ttV_syst_'+histogram_name, 'ttV explicit variations '+pad_master.GetTitle(), 700, 700)
         botPad, topPad = ru.buildBotTopPads(can, squeezeMargins=False)
         # top
         can.cd()
         topPad.Draw()
         topPad.cd()
         topPad._po = [pad_master] # persistent objects
+        pad_master.GetXaxis().SetTitleSize(0)
+        pad_master.GetXaxis().SetLabelSize(0)
         pad_master.Draw('axis')
-        ru.topRightLabel(topPad, pad_master.GetTitle(), xpos=0.5)
+        # ru.topRightLabel(topPad, pad_master.GetTitle(), xpos=0.5)
+        ru.topRightLabel(topPad, "#bf{#it{ATLAS}} Simulation Internal", xpos=0.85, ypos=0.9)
+        ru.topRightLabel(topPad, "#sqrt{s} = 13 TeV",                   xpos=0.85, ypos=0.8)
 
-        leg = ru.topRightLegend(can, 0.225, 0.325)
+        leg = ru.topRightLegend(can, legWidth=0.225, legHeight=0.300, hShift=-0.10, vShift=-0.25)
         leg.SetBorderSize(0)
-        leg.SetHeader(plot_label+ ("(norm=1)" if normalize_to_unity else "(lumi %.1f)"%luminosity))
+        # leg.SetHeader(plot_label+ ("(norm=1)" if normalize_to_unity else "(lumi %.1f)"%luminosity))
         topPad._po.append(leg)
         def format_legend_label(h, l):
             return "{0}: {1:.2E} ({2:.0f})".format(l, h.Integral(), h.GetEntries())
+        def pretty_scale_legend_label(h, l):
+            return ("nominal" if l is 'nom' else
+                    "#mu = 2.0 #mu_{0}" if l is 'up' else
+                    "#mu = 0.5 #mu_{0}" if l is 'dn' else
+                    'unknown')
         for h,l in [(h_nom, 'nom'), (h_up, 'up'), (h_dn, 'dn')]:
             h.Draw('hist same')
-            leg.AddEntry(h, format_legend_label(h, l), 'l')
+            leg.AddEntry(h, pretty_scale_legend_label(h, l), 'l')
             topPad._po.append(h)
         leg.Draw('same')
         def integral_and_error(h):
@@ -190,20 +202,20 @@ def main() :
         botPad.cd()
         ratio_up = ru.buildRatioHistogram(h_up, h_nom)
         ratio_dn = ru.buildRatioHistogram(h_dn, h_nom)
-        yMin, yMax = 0.0, 2.0
+        yMin, yMax = 0.5, 1.5
         ratioPadMaster = pad_master.Clone(pad_master.GetName()+'_ratio')
         ratioPadMaster.SetMinimum(yMin)
         ratioPadMaster.SetMaximum(yMax)
         ratioPadMaster.SetStats(0)
         ratioPadMaster.Draw('axis')
         x_lo, x_hi = ru.getXrange(ratioPadMaster)
-        refLines = [ru.referenceLine(x_lo, x_hi, y, y) for y in [0.5, 1.0, 1.5]]
+        refLines = [ru.referenceLine(x_lo, x_hi, y, y) for y in [0.5, 1.0, 1.5] if y>yMin and y<yMax]
         for l in refLines : l.Draw()
         ratio_up.Draw('same')
         ratio_dn.Draw('same')
         xA, yA = ratioPadMaster.GetXaxis(), ratioPadMaster.GetYaxis()
-        textScaleUp = 0.75*1.0/botPad.GetHNDC()
-        yA.SetNdivisions(-104)
+        textScaleUp = 1.0/botPad.GetHNDC()
+        yA.SetNdivisions(-102)
         yA.SetTitle('ratio')
         yA.CenterTitle()
         yA.SetTitleOffset(yA.GetTitleOffset()/textScaleUp)
@@ -218,6 +230,7 @@ def main() :
         first_histo = histogram_name is histogram_names[0]
         last_histo  = histogram_name is histogram_names[-1]
         can.SaveAs(outdir+'/'+can.GetName()+'.png')
+        can.SaveAs(outdir+'/'+can.GetName()+'.eps')
         can.SaveAs(output_pdf_name+ (')' if last_histo else ''))
 
 
