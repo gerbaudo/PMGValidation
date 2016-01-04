@@ -531,6 +531,7 @@ EL::StatusCode TruthReader :: execute ()
   bool pass_sr3b   = (num_ss_leptons>=2 && num_jet20_b >=3                 && etmiss>100.0 && meff>600.0);
   bool pass_sr1b   = (num_ss_leptons>=2 && num_jet20_b >=1 && num_jet50>=4 && etmiss>100.0 && meff>600.0);
   bool pass_sr0b5j = (num_ss_leptons>=2 && num_jet20_b ==0 && num_jet50>=5 && etmiss>100.0 && meff>600.0);
+  bool pass_sr0b4j = (num_ss_leptons>=2 && num_jet20_b ==0 && num_jet50>=4 && etmiss>100.0 && meff>600.0);
   bool pass_sr0b3j = (num_ss_leptons>=3 && num_jet20_b ==0 && num_jet50>=3 && etmiss>100.0 && meff>600.0);
   bool pass_sr = (pass_sr3b or pass_sr1b or pass_sr0b5j or pass_sr0b3j);
 
@@ -672,6 +673,10 @@ EL::StatusCode TruthReader :: execute ()
   }
   if(pass_sr0b5j){
       fillHistos(m_sr0b5j_histos,
+                 v_jet50, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
+  }
+  if(pass_sr0b4j){
+      fillHistos(m_sr0b4j_histos,
                  v_jet50, v_bjet20, v_bjet20_emul, v_electron, v_muon, jftm, etmiss, etmissPhi, meff_ss, eventWeight);
   }
   if(pass_sr0b3j){
@@ -919,6 +924,7 @@ void TruthReader::generateSrHistograms()
     m_sr3b_histos.clone_with_suffix  (m_inclusive_histos, wk(), "_sr3b",   " (sr3b)");
     m_sr1b_histos.clone_with_suffix  (m_inclusive_histos, wk(), "_sr1b",   " (sr1b)");
     m_sr0b5j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b5j", " (sr0b5j)");
+    m_sr0b4j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b4j", " (sr0b4j)");
     m_sr0b3j_histos.clone_with_suffix(m_inclusive_histos, wk(), "_sr0b3j", " (sr0b3j)");
     m_cr1bttZ_histos.clone_with_suffix(m_inclusive_histos, wk(), "_cr1bttZ", " (cr1bttZ)");
     m_cr2bttZ_histos.clone_with_suffix(m_inclusive_histos, wk(), "_cr2bttZ", " (cr2bttZ)");
