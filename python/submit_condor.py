@@ -19,6 +19,7 @@
 # davide.gerbaudo@gmail.com
 #  October 2015
 
+import datetime
 import logging as log
 import shutil
 import subprocess
@@ -55,6 +56,7 @@ def main() :
                      "brick-only")
     submit = args.submit
     log.debug("options:\ninput file: {}\npattern: {}\nsite option: {}".format(input_files, pattern, site_option))
+    submission_commands = [] # to be recorded in a bookkeping log
     for input_file in input_files:
         file_label = without_extension(input_file)
         iSample = 0
@@ -99,9 +101,16 @@ def main() :
                     run_cmd = 'ARGS="'+script_arguments+'" condor_submit '+condor_script+' '+log_cmd+' '+err_cmd+' '+out_cmd
 
                     log.debug(run_cmd)
+                    submission_commands.append(run_cmd)
                     if submit:
                         subprocess.call(run_cmd, shell=True)
                 iSample += 1
+    if submit:
+        postmark = datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d')
+        submission_log = os.path.join(args.output_dir.strip(), "submission_commands_%s.log"%postmark)
+        with open(submission_log, 'w') as submission_logfile:
+            submission_logfile.write("# submitted on "+postmark)
+            submission_logfile.write('\n'.join(submission_commands))
 
 
 def build_condor_script(site_option='', samplename='', abs_dest_dir='', script_dir='batch/script') :
