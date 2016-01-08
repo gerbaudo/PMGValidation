@@ -103,6 +103,7 @@ def main() :
         pad_master = h_nom
         pad_master.SetMaximum(1.1*max([h.GetMaximum() for h in histos]))
         pad_master.SetMinimum(1.0*min([0.0]+[h.GetMinimum() for h in histos]))
+        pad_master.GetYaxis().SetTitle('arbitrary units')
         pad_master.SetStats(0)
         can = R.TCanvas('c_ttV_syst_'+histogram_name, 'ttV explicit variations '+pad_master.GetTitle(), 700, 700)
         botPad, topPad = ru.buildBotTopPads(can, squeezeMargins=False)
@@ -198,6 +199,7 @@ def main() :
         topPad.Update()
         # bottom
         can.cd()
+        botPad.SetTopMargin(1.25*botPad.GetTopMargin())
         botPad.Draw()
         botPad.cd()
         ratio_up = ru.buildRatioHistogram(h_up, h_nom)
@@ -214,12 +216,12 @@ def main() :
         ratio_up.Draw('same')
         ratio_dn.Draw('same')
         xA, yA = ratioPadMaster.GetXaxis(), ratioPadMaster.GetYaxis()
-        textScaleUp = 1.0/botPad.GetHNDC()
+        textScaleUp = 0.75*1.0/botPad.GetHNDC()
         yA.SetNdivisions(-102)
         yA.SetTitle('ratio')
         yA.CenterTitle()
         yA.SetTitleOffset(yA.GetTitleOffset()/textScaleUp)
-        xA.SetTitleSize(yA.GetTitleSize()) # was set to 0 for padmaster, restore it
+        xA.SetTitleSize(yA.GetTitleSize()) # x- was set to 0 for padmaster, restore it
         xA.SetLabelSize(yA.GetLabelSize())
         for a in [xA, yA] :
             a.SetLabelSize(a.GetLabelSize()*textScaleUp)
