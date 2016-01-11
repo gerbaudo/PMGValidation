@@ -103,7 +103,7 @@ def main() :
         pad_master = h_nom
         pad_master.SetMaximum(1.1*max([h.GetMaximum() for h in histos]))
         pad_master.SetMinimum(1.0*min([0.0]+[h.GetMinimum() for h in histos]))
-        pad_master.GetYaxis().SetTitle('arbitrary units')
+        pad_master.GetYaxis().SetTitle('Arbitrary Units')
         pad_master.SetStats(0)
         can = R.TCanvas('c_ttV_syst_'+histogram_name, 'ttV explicit variations '+pad_master.GetTitle(), 700, 700)
         botPad, topPad = ru.buildBotTopPads(can, squeezeMargins=False)
@@ -116,7 +116,7 @@ def main() :
         pad_master.GetXaxis().SetLabelSize(0)
         pad_master.Draw('axis')
         # ru.topRightLabel(topPad, pad_master.GetTitle(), xpos=0.5)
-        ru.topRightLabel(topPad, "#bf{#it{ATLAS}} Simulation Internal", xpos=0.85, ypos=0.9)
+        ru.topRightLabel(topPad, "#bf{#it{ATLAS}} Simulation Preliminary", xpos=0.85, ypos=0.9)
         ru.topRightLabel(topPad, "#sqrt{s} = 13 TeV",                   xpos=0.85, ypos=0.8)
 
         leg = ru.topRightLegend(can, legWidth=0.225, legHeight=0.300, hShift=-0.10, vShift=-0.25)
@@ -218,11 +218,12 @@ def main() :
         xA, yA = ratioPadMaster.GetXaxis(), ratioPadMaster.GetYaxis()
         textScaleUp = 0.75*1.0/botPad.GetHNDC()
         yA.SetNdivisions(-102)
-        yA.SetTitle('ratio')
+        yA.SetTitle('Ratio')
         yA.CenterTitle()
         yA.SetTitleOffset(yA.GetTitleOffset()/textScaleUp)
         xA.SetTitleSize(yA.GetTitleSize()) # x- was set to 0 for padmaster, restore it
         xA.SetLabelSize(yA.GetLabelSize())
+        xA.SetTitle(prettify_title(xA.GetTitle()))
         for a in [xA, yA] :
             a.SetLabelSize(a.GetLabelSize()*textScaleUp)
             a.SetTitleSize(a.GetTitleSize()*textScaleUp)
@@ -235,6 +236,12 @@ def main() :
         can.SaveAs(outdir+'/'+can.GetName()+'.eps')
         can.SaveAs(output_pdf_name+ (')' if last_histo else ''))
 
+def prettify_title(title):
+    "convert titles to harmonized ones"
+    titles = {
+        'Number of Jets' : 'Jet multiplicity'
+        }
+    return titles[titles] if title in titles else title
 
 def get_n_and_sumw_of_processed_events(input_filename='', histogram_name='h_numEvents'):
     "read from file the number of events that have been processed, and their sumw"
