@@ -238,10 +238,11 @@ def main() :
 
 def prettify_title(title):
     "convert titles to harmonized ones"
+    title = title.strip()
     titles = {
         'Number of Jets' : 'Jet multiplicity'
         }
-    return titles[titles] if title in titles else title
+    return titles[title] if title in titles else title
 
 def get_n_and_sumw_of_processed_events(input_filename='', histogram_name='h_numEvents'):
     "read from file the number of events that have been processed, and their sumw"
